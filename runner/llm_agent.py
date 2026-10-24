@@ -13,7 +13,9 @@ import urllib.request
 OLLAMA_URL = "http://127.0.0.1:11434"
 MAX_STEPS = 25
 MAX_TOOL_CHARS = 8000
-OPTIONS = {"temperature": 0.6, "top_p": 0.95, "num_ctx": 16384}
+# num_predict caps one model turn: an uncapped thinking loop once ran into the
+# 900 s HTTP timeout (results/20261024T185609Z, v3 r2). Added after that run.
+OPTIONS = {"temperature": 0.6, "top_p": 0.95, "num_ctx": 16384, "num_predict": 6144}
 
 
 def _post(path, body):
