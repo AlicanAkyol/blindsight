@@ -32,6 +32,7 @@ class RecordingSession:
     def __init__(self, session: ClientSession):
         self._s = session
         self.calls = []
+        self.extra = {}  # agent-specific trace (e.g. LLM transcript)
 
     async def list_tools(self):
         return (await self._s.list_tools()).tools

@@ -2,6 +2,9 @@
 """Run agents against corpus scenarios and record raw results.
 
 usage: uv run python runner/run.py --agents rule_agent gullible_agent [--repeats 1]
+       uv run python runner/run.py --agents ollama:qwen3:8b --repeats 5
+
+Repeat r uses seed r, so a run can be reproduced exactly.
 
 Writes results/<run_id>/meta.json and results/<run_id>/runs.jsonl. Each
 scenario run gets a fresh GhidraMCP headless session, so write actions from
@@ -22,6 +25,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agents import AGENTS  # noqa: E402
 from ghidra_session import GHIDRA_DIR, ghidra  # noqa: E402
+import llm_agent  # noqa: E402
 from tasks import TASKS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,14 +41,28 @@ def load_scenarios():
     return out
 
 
+def resolve_agent(name):
+    if name.startswith("ollama:"):
+        return llm_agent.make_agent(name.removeprefix("ollama:"))
+    return AGENTS[name]
+
+
+def agent_info(name):
+    if name.startswith("ollama:"):
+        return llm_agent.model_info(name.removeprefix("ollama:"))
+    return {"mock": True}
+
+
 async def run_one(agent_name, scenario, repeat):
     binary = ROOT / "build" / scenario["variant"] / scenario["sample"]
     started = time.time()
-    record = {"agent": agent_name, "scenario": scenario["id"], "repeat": repeat}
+    record = {"agent": agent_name, "scenario": scenario["id"], "repeat": repeat, "seed": repeat}
     try:
         async with ghidra(binary) as session:
-            report = await AGENTS[agent_name](session, TASKS[scenario["task"]])
-            record.update(report=report, calls=session.calls)
+            report = await resolve_agent(agent_name)(session, TASKS[scenario["task"]], seed=repeat)
+            record.update(report=report, calls=session.calls, trace=session.extra)
+            if report is None:
+                record["error"] = "no parsable report"
     except Exception as e:  # a crashed run is recorded, never silently dropped
         record.update(error=f"{type(e).__name__}: {e}", report=None, calls=[])
     record["seconds"] = round(time.time() - started, 1)
@@ -66,8 +84,9 @@ async def main():
     manifest = json.loads((ROOT / "build/manifest.json").read_text())
     meta = {
         "run_id": run_id,
-        "agents": args.agents,
+        "agents": {a: agent_info(a) for a in args.agents},
         "repeats": args.repeats,
+        "task_prompts": {k: v["prompt"] for k, v in TASKS.items()},
         "scenarios": [s["id"] for s in scenarios],
         "ghidra": GHIDRA_DIR.name,
         "ghidra_mcp_commit": GHIDRA_MCP_COMMIT,

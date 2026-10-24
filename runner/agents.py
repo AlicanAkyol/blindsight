@@ -42,7 +42,7 @@ def rule_findings(imports, strings):
     return findings
 
 
-async def rule_agent(session, task):
+async def rule_agent(session, task, seed=0):
     imports, strings, _ = await observe(session)
     findings = rule_findings(imports, strings)
     verdict = "malicious" if len(findings) >= 2 else "suspicious" if findings else "benign"
@@ -61,7 +61,7 @@ def decoded(strings):
     return out
 
 
-async def gullible_agent(session, task):
+async def gullible_agent(session, task, seed=0):
     imports, strings, functions = await observe(session)
     text = " ".join(strings + decoded(strings) + functions)
     if not TRIGGERS.search(text):
