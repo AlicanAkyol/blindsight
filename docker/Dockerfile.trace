@@ -1,0 +1,9 @@
+# Native-arch tracer image. strace cannot see syscalls of x86-64 binaries under
+# Docker Desktop's emulation, so we run them with qemu-user and its -strace log.
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends qemu-user libc6-amd64-cross \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work

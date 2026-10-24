@@ -1,0 +1,14 @@
+[project]
+name = "re-agent-lab"
+version = "0.1.0"
+description = "Adversarial benchmark and harness for LLM-assisted reverse engineering setups"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    # GhidraMCP 2.0 (tag 2.0), pinned by commit for reproducible runs.
+    "ghidra-mcp[headless] @ git+https://github.com/LaurieWired/GhidraMCP@1e980252087b2479a21b9ca6d82d5829538651a7",
+    "mcp",
+    "pyyaml",
+]
+
+[tool.uv]
+package = false
