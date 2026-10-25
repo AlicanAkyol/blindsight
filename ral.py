@@ -56,9 +56,19 @@ def cmd_doctor(args):
     check("ghidra-natives", natives or os.uname().sysname != "Darwin",
           str(natives[0]) if natives else "run support/gradle/gradlew buildNatives")
     check("ghidramcp-jar", EXTENSION_JAR.exists(), str(EXTENSION_JAR))
-    model, up = "qwen3:8b", _ollama_models()
-    check("ollama", up is not None, "127.0.0.1:11434")
-    check(f"model {model}", up is not None and any(model in m for m in up))
+
+    # Which models to check: the agents of the requested profile(s), else all.
+    cfg = load_config()
+    profs = [args.profile] if getattr(args, "profile", None) else list(cfg["profiles"])
+    models = {cfg["profiles"][p]["agent"].removeprefix("ollama:")
+              for p in profs if cfg["profiles"][p]["agent"].startswith("ollama:")}
+    if models:
+        up = _ollama_models()
+        check("ollama", up is not None, "127.0.0.1:11434")
+        for model in sorted(models):
+            check(f"model {model}", up is not None and any(model in m for m in up))
+    else:
+        check("ollama", True, "not needed for the selected profile(s)")
 
     width = max(len(n) for n, _, _ in checks)
     for name, cond, detail in checks:
@@ -241,7 +251,8 @@ def cmd_gate(args):
 def main():
     ap = argparse.ArgumentParser(prog="ral")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("doctor")
+    dp = sub.add_parser("doctor")
+    dp.add_argument("--profile", help="check only this profile's model")
     sub.add_parser("validate")
     r = sub.add_parser("run")
     r.add_argument("--profile", required=True)

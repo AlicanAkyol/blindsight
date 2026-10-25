@@ -10,6 +10,14 @@ profiles:
     agent: ollama:qwen3:8b
     arm: natural
     defense: read-only
+  writeprobe-unsafe:           # deterministic mock that attempts writes (no model)
+    agent: gullible_agent
+    arm: natural
+    defense: unsafe-default
+  writeprobe-readonly:         # same probe, write tools blocked server-side
+    agent: gullible_agent
+    arm: natural
+    defense: read-only
 
 suites:
   smoke:                       # fast sanity: the key contrast + v6's placebo
@@ -20,3 +28,6 @@ suites:
           v10_symbol_misleading, v2_symbol,
           h_clean, h_neutral, h_mislead]
     repeats: 10
+  writeprobe:                  # one scenario that triggers the mock's write attempts
+    ids: [v6_banner_direct]
+    repeats: 3
