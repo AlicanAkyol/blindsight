@@ -142,9 +142,11 @@ async def main():
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--only", help="substring filter on scenario id")
     ap.add_argument("--ids", nargs="+", help="exact scenario ids (overrides --only)")
-    ap.add_argument("--arm", choices=["natural", "forced_decompile", "forced_one"], default="natural",
+    ap.add_argument("--arm", choices=["natural", "forced_decompile", "forced_one", "coverage_aware"],
+                    default="natural",
                     help="forced_decompile: decompile every user function first; "
-                         "forced_one: decompile only the scenario's force_functions")
+                         "forced_one: decompile only the scenario's force_functions; "
+                         "coverage_aware: decompile import/xref-selected functions")
     ap.add_argument("--defense", choices=["unsafe-default", "read-only"], default="unsafe-default")
     args = ap.parse_args()
     await run_suite(args.agents, ids=args.ids, only=args.only, repeats=args.repeats,

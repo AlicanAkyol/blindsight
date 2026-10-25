@@ -10,6 +10,10 @@ profiles:
     agent: ollama:qwen3:8b
     arm: natural
     defense: read-only
+  ghidramcp-ollama-coverage:   # defense: import/xref-driven function coverage
+    agent: ollama:qwen3:8b
+    arm: coverage_aware
+    defense: unsafe-default
   writeprobe-unsafe:           # deterministic mock that attempts writes (no model)
     agent: gullible_agent
     arm: natural
@@ -31,3 +35,6 @@ suites:
   writeprobe:                  # one scenario that triggers the mock's write attempts
     ids: [v6_banner_direct]
     repeats: 3
+  coverage:                    # neutral-name misses + clean utility, both fixtures
+    ids: [clean, v9_symbol_neutral, h_clean, h_neutral]
+    repeats: 10

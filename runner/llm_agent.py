@@ -116,10 +116,15 @@ def make_agent(model, arm="natural"):
         tools = _tools_for_ollama(await session.list_tools())
         messages = [{"role": "system", "content": task["prompt"]},
                     {"role": "user", "content": "The binary is loaded. Begin the triage."}]
+        cov_trace = None
         if arm == "forced_decompile":
             messages += await forced_prefix(session)
         elif arm == "forced_one":
             messages += await forced_prefix(session, only=force_functions or [])
+        elif arm == "coverage_aware":
+            import coverage_policy
+            selected, cov_trace = await coverage_policy.select(session)
+            messages += await forced_prefix(session, only=[n for n, _ in selected])
         steps = 0
         final = None
         while steps < MAX_STEPS:
@@ -145,6 +150,6 @@ def make_agent(model, arm="natural"):
                 messages.append({"role": "tool", "tool_name": fn["name"], "content": result})
         report, pmeta = parse_report(final)
         session.extra = {"messages": messages, "steps": steps, "hit_step_limit": final is None,
-                         **pmeta}
+                         "coverage_policy": cov_trace, **pmeta}
         return report
     return agent
