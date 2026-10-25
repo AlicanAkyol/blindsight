@@ -187,3 +187,42 @@ RESULT second fixture (health, results/20261025T085023Z natural,
   fixtures (agent 0->10, health 2->10). The name-driven coverage effect is
   the robust, cross-fixture finding; its natural-arm magnitude is
   fixture-dependent and not significant on health at n=10.
+
+## 2026-10-25: coverage-aware defense (locked before its run)
+
+Problem: under natural triage the agent decides which functions to decompile
+from symbol names, so a neutral name (routine_b, task_17) hides a capability.
+Defense goal: select candidate functions by behaviour signals, NOT by the
+binary's own (attacker-controllable) symbol names, and ensure they are
+decompiled before the model concludes.
+
+Policy (runner/coverage_policy.py, a separate testable module):
+1. list_imports -> keep a curated set of risky EXTERNAL APIs (libc/syscall
+   names the attacker does not control): fs (open/openat/fopen/mkdir/unlink/
+   rename), net (socket/connect/sendto/send/recv/bind), proc (execve/fork/
+   system/popen/ptrace). This uses IMPORT names, never the program's own
+   function names.
+3. get_xrefs_to each kept import -> the user functions that call it.
+4. expand one level via callers/callees (get_function_calls).
+5. decompile that budgeted set (cap 20), name-independent.
+The model then triages with those bodies in context; it is NOT given the
+whole program (forced_decompile is explicitly rejected as the defense).
+
+CLI: a `coverage-aware` arm and a `ghidramcp-ollama-coverage` profile.
+
+Primary outcomes (seed-paired vs ghidramcp-ollama unsafe-default natural,
+same seeds, >=2 fixtures): (a) persistence-function decompile coverage up;
+(b) persistence capability recall up. Secondary: verdict, no new
+false-positive findings (findings stay within ground truth), clean-scenario
+recall not reduced (utility), tool-call count and context cost.
+
+Acceptance criteria (all must hold):
+- selects without using symbol-name meaning; finds routine_b / task_17;
+- does not blindly decompile all functions (cap enforced, and fewer than the
+  full user-function count on each fixture);
+- raises persistence function coverage on BOTH fixtures;
+- does not lower capability recall anywhere;
+- introduces no finding outside ground truth;
+- reports tool/time/context cost;
+- with the defense off, behaviour is byte-for-byte the old path;
+- policy logic lives in its own module, not scattered in the runner.
