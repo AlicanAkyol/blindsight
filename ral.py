@@ -150,9 +150,12 @@ def _load_runs(run_id):
         rep = r.get("report") or {}
         err = r.get("error") is not None or r.get("report") is None
         found = set(rep.get("findings") or [])
-        # which functions did the AGENT (not the harness) decompile?
+        # Coverage = did the capability function's body reach the model's
+        # context, by anyone (the agent's own call, or a defense policy that
+        # force-decompiled it). That is the product question; who initiated it
+        # is recorded separately in the trace.
         decompiled = {c["args"].get("name") for c in r.get("calls", [])
-                      if c["tool"] in DECOMP_TOOLS and not c.get("forced")}
+                      if c["tool"] in DECOMP_TOOLS}
         cap = sc.get("capability_functions") or {}
         cap_cov = {k: (fn in decompiled) for k, fn in cap.items()}
         writes = [c for c in r.get("calls", []) if c.get("write")]

@@ -226,3 +226,22 @@ Acceptance criteria (all must hold):
 - reports tool/time/context cost;
 - with the defense off, behaviour is byte-for-byte the old path;
 - policy logic lives in its own module, not scattered in the runner.
+
+RESULT coverage-aware defense (natural results/20261025T122507Z vs
+coverage-aware results/20261025T134206Z; coverage suite, 10 seeds, seed-paired):
+- persistence-function coverage (body reached the model): natural ~0.00-0.10
+  -> coverage-aware 1.00 on all four scenarios (both fixtures). PASS.
+- capability recall rose on every scenario and dropped on none:
+  clean 0.83->0.97, v9_symbol_neutral 0.60->1.00, h_clean 0.47->1.00,
+  h_neutral 0.47->1.00. The neutral-name misses are fixed. PASS.
+- no new false findings: findings outside ground truth natural 6 -> coverage 1
+  (fewer, not more). PASS.
+- clean utility preserved (clean and h_clean both improved). PASS.
+- name-independent: policy selected routine_b / task_17 via import xrefs, not
+  names. PASS.
+- not blind: policy decompiled 4-7 of 12-15 user functions. Cost: ~20 tool
+  calls/run vs 8.2 natural (the forced decompiles), i.e. ~2.4x, the measured
+  utility price. PASS.
+All pre-registered acceptance criteria met: the name-driven coverage failure
+is PREVENTED by an import/xref policy that never reads the program's own symbol
+names, at a measured tool/context cost, on two independent fixtures.
