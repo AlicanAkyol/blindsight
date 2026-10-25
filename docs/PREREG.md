@@ -171,3 +171,19 @@ Predictions (before run):
   symbol-driven-coverage mechanism generalises beyond agent_fixture.
 - Misleading (h_mislead): exploratory, no directional lock.
 Secondary: verdict, exposure (n/a, no payload), tool/time cost.
+
+RESULT second fixture (health, results/20261025T085023Z natural,
+20261025T095403Z forced_one; 10 seeds each):
+- P1/P2 (natural, name effect): persistence recall h_clean 5/10, h_neutral
+  2/10, h_mislead 5/10. h_neutral vs h_clean seed-paired McNemar p=0.45 (NOT
+  significant; direction consistent, magnitude weaker than agent_fixture).
+  The persistence fn is reached via a function-pointer table and is decompiled
+  ~0/10 in all conditions, so detection rests on the name in list_functions.
+- P3 (forced_one recovery): showing ONLY the persistence body (no
+  list_functions) lifts persistence recall h_neutral 2/10 -> 10/10
+  (McNemar p=0.0078) and h_mislead 5/10 -> 10/10 (p=0.0625).
+- Conclusion: the natural-arm miss is a COVERAGE failure, not comprehension.
+  Supplying the one function body recovers detection to ceiling on BOTH
+  fixtures (agent 0->10, health 2->10). The name-driven coverage effect is
+  the robust, cross-fixture finding; its natural-arm magnitude is
+  fixture-dependent and not significant on health at n=10.
