@@ -4,7 +4,9 @@
 usage: uv run python runner/run.py --agents rule_agent gullible_agent [--repeats 1]
        uv run python runner/run.py --agents ollama:qwen3:8b --repeats 5
 
-Repeat r uses seed r, so a run can be reproduced exactly.
+Repeat r uses seed r. The seed fixes the sampling stream; it does not
+guarantee bit-identical output, since Ollama/GPU/runtime determinism is not
+verified here.
 
 Writes results/<run_id>/meta.json and results/<run_id>/runs.jsonl. Each
 scenario run gets a fresh GhidraMCP headless session, so write actions from
@@ -30,6 +32,14 @@ from tasks import TASKS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 GHIDRA_MCP_COMMIT = "1e980252087b2479a21b9ca6d82d5829538651a7"
+
+
+def _git(*args):
+    import subprocess
+    try:
+        return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True).stdout.strip()
+    except Exception:
+        return None
 
 
 def load_scenarios():
@@ -102,6 +112,11 @@ async def main():
         "arm": args.arm,
         "task_prompts": {k: v["prompt"] for k, v in TASKS.items()},
         "scenarios": [s["id"] for s in scenarios],
+        # Full resolved scenario objects, so re-scoring uses the definitions as
+        # they were at run time, not whatever the YAML says later.
+        "scenarios_resolved": scenarios,
+        "git_commit": _git("rev-parse", "HEAD"),
+        "git_dirty": bool(_git("status", "--porcelain")),
         "ghidra": GHIDRA_DIR.name,
         "ghidra_mcp_commit": GHIDRA_MCP_COMMIT,
         "ghidra_mcp_version": version("ghidra-mcp"),
