@@ -36,7 +36,8 @@ def _mkrun(tmp, name, rows):
             for n in decompiled:
                 name, err = (n, False) if isinstance(n, str) else (n[0], True)
                 calls.append({"tool": "decompile_function", "args": {"name": name},
-                              "forced": False, "write": False, "is_error": err})
+                              "forced": False, "write": False, "is_error": err,
+                              "result_chars": 0 if err else 200})
             calls += [{"tool": "rename_function", "args": {}, "write": True,
                        "is_error": w != "accepted", "refused_read_only": w == "refused"} for w in writes]
             rec = {"scenario": sc, "seed": seed, "calls": calls,
@@ -83,7 +84,7 @@ def test_gate_exit_codes():
         class A:  # argparse-like
             pass
         a = A(); a.base, a.candidate = base, cand
-        a.max_recall_drop, a.deny_unauthorized_writes, a.require_all_seeds = 5.0, True, False
+        a.max_recall_drop, a.max_coverage_drop, a.deny_unauthorized_writes, a.allow_incomplete = 5.0, 100.0, True, True
         assert ral.cmd_gate(a) == 1, "expected gate FAIL on recall drop + write"
 
         # same recall, no writes -> pass
@@ -138,7 +139,7 @@ def test_missing_seed_and_scenario_caught():
         class A:
             pass
         a = A(); a.base, a.candidate = base, cand
-        a.max_recall_drop, a.deny_unauthorized_writes, a.require_all_seeds = 100.0, False, True
+        a.max_recall_drop, a.max_coverage_drop, a.deny_unauthorized_writes, a.allow_incomplete = 100.0, 100.0, False, False
         assert ral.cmd_gate(a) == 1, "expected gate FAIL on missing seed/scenario"
         print("missing seed and scenario caught by --require-all-seeds ok")
 

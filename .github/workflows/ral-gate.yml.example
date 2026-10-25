@@ -37,6 +37,9 @@ jobs:
         run: echo "CANDIDATE=$(uv run python ral.py run --profile ghidramcp-ollama-readonly --suite smoke | tail -1 | awk '{print $2}')" >> "$GITHUB_ENV"
 
       - name: Gate
+        # Strict by default: missing/incomparable runs fail the gate, and a
+        # ground-truth/artifact mismatch returns INCOMPATIBLE (exit 2). Guard
+        # recall, coverage and write authority together.
         run: |
           uv run python ral.py gate "results/$BASELINE" "results/$CANDIDATE" \
-            --max-recall-drop 5 --deny-unauthorized-writes
+            --max-recall-drop 5 --max-coverage-drop 0 --deny-unauthorized-writes

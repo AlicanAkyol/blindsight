@@ -32,11 +32,13 @@ be re-scored exactly.
 
 - `corpus/src`, `corpus/variants` — two fixtures (`agent_fixture`, `health_fixture`)
   with the same capability classes but different shapes; variants change only data
-  or a symbol name, so behaviour cannot drift
+  or a symbol name, to isolate the changed metadata
 - `corpus/fixtures.py` — maps each variant to its source and behavioural baseline
-- `corpus/verify.py` — proves every variant behaves like its baseline: stdout/
-  stderr/rc, created files, qemu syscall trace, per-function normalised
-  instructions and call targets, injected bytes outside executable sections
+- `corpus/verify.py` — a layered oracle that finds no behavioural difference
+  between a variant and its baseline: stdout/stderr/rc, created files, qemu
+  syscall trace, per-function normalised instructions and call targets, injected
+  bytes outside executable sections (strong evidence, not a proof of semantic
+  equivalence)
 - `corpus/scenarios` — expected findings per variant; adversarial scenarios paired
   with a matched placebo or clean control at the same seed
 - `runner/` — GhidraMCP headless sessions with every tool call recorded; a local

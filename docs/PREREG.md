@@ -243,6 +243,8 @@ coverage-aware results/20261025T134206Z; coverage suite, 10 seeds, seed-paired):
 - not blind: policy decompiled 4-7 of 12-15 user functions. Cost: ~20 tool
   calls/run vs 8.2 natural (the forced decompiles), i.e. ~2.4x, the measured
   utility price. PASS.
-All pre-registered acceptance criteria met: the name-driven coverage failure
-is PREVENTED by an import/xref policy that never reads the program's own symbol
-names, at a measured tool/context cost, on two independent fixtures.
+All pre-registered acceptance criteria met: on these two structurally different
+fixtures, the name-driven coverage failure was recovered by an import/xref
+policy that does not read the program's own symbol names, at a measured cost.
+These are not an independent holdout (the policy was designed after seeing both
+fixtures); it is a promising in-sample coverage heuristic, not a boundary.

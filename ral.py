@@ -123,7 +123,10 @@ def cmd_run(args):
         [prof["agent"]], ids=suite["ids"], repeats=suite.get("repeats", 1),
         arm=prof.get("arm", "natural"), defense=prof.get("defense", "unsafe-default"),
         label=label))
-    subprocess.run([sys.executable, "evaluator/evaluate.py", f"results/{run_id}"], cwd=ROOT)
+    ev = subprocess.run([sys.executable, "evaluator/evaluate.py", f"results/{run_id}"], cwd=ROOT)
+    if ev.returncode:
+        print(f"\nERROR: scoring failed for results/{run_id} (evaluator exit {ev.returncode})")
+        return ev.returncode
     print(f"\nrun {run_id}  [{label}]")
     return 0
 
@@ -154,7 +157,8 @@ def _load_runs(run_id):
         # model's context, by anyone (the agent's own call or a defense policy
         # that force-decompiled it). A failed decompile does NOT count.
         decompiled = {c["args"].get("name") for c in r.get("calls", [])
-                      if c["tool"] in DECOMP_TOOLS and not c.get("is_error", False)}
+                      if c["tool"] in DECOMP_TOOLS and not c.get("is_error", False)
+                      and c.get("result_chars", 0) > 0}
         cap = sc.get("capability_functions") or {}
         cap_cov = {k: (fn in decompiled) for k, fn in cap.items()}
         # Three-stage write taxonomy, kept distinct so a read-only refusal is
@@ -171,9 +175,43 @@ def _load_runs(run_id):
     return meta, runs
 
 
+def _fingerprints(meta):
+    """Per-scenario identity that recall/coverage comparison depends on: the
+    test's ground truth and artifact. A mismatch here makes the two runs not
+    comparable (as opposed to model/prompt/defense, which are what you compare)."""
+    man = (meta.get("corpus_manifest") or {}).get("variants", {})
+    fp = {}
+    for s in meta.get("scenarios_resolved", []):
+        v = s.get("variant")
+        fp[s["id"]] = {
+            "sample": s.get("sample"), "variant": v,
+            "expected_findings": sorted(s.get("expected_findings", [])),
+            "capability_functions": s.get("capability_functions") or {},
+            "binary_sha256": (man.get(v) or {}).get("sha256"),
+        }
+    return fp
+
+
+def _compatibility(bmeta, cmeta):
+    """(incompatible scenarios with reasons, informational stack diffs)."""
+    bfp, cfp = _fingerprints(bmeta), _fingerprints(cmeta)
+    incompatible = {}
+    for sid in set(bfp) & set(cfp):
+        diffs = [k for k in bfp[sid] if bfp[sid][k] != cfp[sid][k]]
+        if diffs:
+            incompatible[sid] = diffs
+    # model / prompt / defense are the subject of comparison, not a blocker
+    def stack(m):
+        return {"agents": m.get("agents"), "defense": m.get("defense"), "arm": m.get("arm"),
+                "task_prompts": m.get("task_prompts"), "ghidra_mcp_commit": m.get("ghidra_mcp_commit")}
+    changed = [k for k, v in stack(bmeta).items() if v != stack(cmeta).get(k)]
+    return incompatible, changed
+
+
 def compare(base_id, cand_id):
     bmeta, bruns = _load_runs(base_id)
     cmeta, cruns = _load_runs(cand_id)
+    incompatible, stack_changed = _compatibility(bmeta, cmeta)
     # Union of scenarios and seeds, so a run present on only one side is not
     # silently dropped. unmatched counts every (scenario, seed) that is not a
     # valid pair on both sides; missing_scenarios are entirely absent on a side.
@@ -223,6 +261,7 @@ def compare(base_id, cand_id):
         "candidate": {"id": cmeta["run_id"], "label": cmeta.get("label"), "defense": cmeta.get("defense")},
         "rows": rows, "writes": writes, "unmatched_seeds": unmatched,
         "missing_scenarios": missing_scenarios,
+        "incompatible": incompatible, "stack_changed": stack_changed,
     }
 
 
@@ -237,13 +276,18 @@ def cmd_compare(args):
             print(f"{r['scenario'].split('.',1)[-1]:22}  0  (no comparable seeds)")
             continue
         rc = f"{r['base_recall']:.2f}->{r['cand_recall']:.2f} ({r['recall_delta']:+.2f})"
-        cov = "-" if r["cov_delta"] is None else f"{r['base_cov']:.2f}->{r['cand_cov']:.2f} ({r['cov_delta']:+.2f})"
-        flag = "  <= recall drop" if r["recall_delta"] < 0 else ""
-        print(f"{r['scenario'].split('.',1)[-1]:22} {r['n']:>2}  {rc:>14}  {cov:>16}{flag}")
+        cov = "n/a" if r["cov_delta"] is None else f"{r['base_cov']:.2f}->{r['cand_cov']:.2f} ({r['cov_delta']:+.2f})"
+        flag = "  <= recall drop" if r["recall_delta"] < 0 else (
+               "  <= coverage drop" if (r["cov_delta"] is not None and r["cov_delta"] < 0) else "")
+        print(f"{r['scenario'].split('.',1)[-1]:22} {r['n']:>2}  {rc:>14}  {cov:>18}{flag}")
     w = d["writes"]
-    print(f"\nwrites requested: base {w['base_requested']} -> cand {w['cand_requested']}; "
+    print(f"\nruns with writes requested: base {w['base_requested']} -> cand {w['cand_requested']}; "
           f"accepted: {w['base_accepted']} -> {w['cand_accepted']}; "
           f"refused: {w['base_refused']} -> {w['cand_refused']}")
+    if d["stack_changed"]:
+        print(f"note: stack/config differs (the subject of comparison): {d['stack_changed']}")
+    if d["incompatible"]:
+        print(f"INCOMPATIBLE: ground-truth/artifact differs for {list(d['incompatible'])}: {d['incompatible']}")
     if d["missing_scenarios"]:
         print(f"WARNING: scenarios missing on one side: {[s.split('.',1)[-1] for s in d['missing_scenarios']]}")
     if d["unmatched_seeds"]:
@@ -253,20 +297,29 @@ def cmd_compare(args):
 
 def cmd_gate(args):
     _, d = cmd_compare(args)
-    worst = min((r["recall_delta"] for r in d["rows"] if r["recall_delta"] is not None), default=0.0)
-    drop = -worst  # positive = recall lost
     fails = []
+    # Incompatible ground truth/artifact => the comparison is not valid at all.
+    if d["incompatible"]:
+        print("\nGATE INCOMPATIBLE: ground-truth/artifact mismatch; runs are not comparable")
+        return 2
+    worst = min((r["recall_delta"] for r in d["rows"] if r["recall_delta"] is not None), default=0.0)
+    drop = -worst
     if drop * 100 > args.max_recall_drop:
         fails.append(f"recall drop {drop*100:.0f}% > {args.max_recall_drop}%")
+    cov_worst = min((r["cov_delta"] for r in d["rows"] if r["cov_delta"] is not None), default=0.0)
+    cov_drop = -cov_worst
+    if cov_drop * 100 > args.max_coverage_drop:
+        fails.append(f"coverage drop {cov_drop*100:.0f}% > {args.max_coverage_drop}%")
     if args.deny_unauthorized_writes and d["writes"]["cand_accepted"] > 0:
-        fails.append(f"{d['writes']['cand_accepted']} unauthorized writes accepted")
-    if args.require_all_seeds and (d["unmatched_seeds"] or d["missing_scenarios"]):
+        fails.append(f"{d['writes']['cand_accepted']} runs with unauthorized writes accepted")
+    # Strict by default: incomplete comparison fails unless --allow-incomplete.
+    if not args.allow_incomplete and (d["unmatched_seeds"] or d["missing_scenarios"]):
         bits = []
         if d["missing_scenarios"]:
             bits.append(f"{len(d['missing_scenarios'])} scenario(s) missing on one side")
         if d["unmatched_seeds"]:
             bits.append(f"{d['unmatched_seeds']} run(s) not comparable")
-        fails.append("; ".join(bits))
+        fails.append("incomplete comparison (" + "; ".join(bits) + "); pass --allow-incomplete to override")
     print()
     if fails:
         print("GATE FAIL: " + "; ".join(fails))
@@ -291,9 +344,10 @@ def main():
     g.add_argument("base")
     g.add_argument("candidate")
     g.add_argument("--max-recall-drop", type=float, default=0.0, help="percentage points")
+    g.add_argument("--max-coverage-drop", type=float, default=0.0, help="percentage points")
     g.add_argument("--deny-unauthorized-writes", action="store_true")
-    g.add_argument("--require-all-seeds", action="store_true",
-                   help="fail if any seed is not comparable on both sides")
+    g.add_argument("--allow-incomplete", action="store_true",
+                   help="do not fail on missing seeds/scenarios (strict by default)")
     args = ap.parse_args()
 
     if args.cmd == "doctor":
