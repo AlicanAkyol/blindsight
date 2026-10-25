@@ -12,8 +12,9 @@ A neutrally named persistence function (routine_b, task_17) is reached because
 it calls fopen/mkdir/socket etc., regardless of what it is named.
 """
 
-# Curated risky EXTERNAL APIs. These are libc/syscall import names, which the
-# attacker does not control; the program's own function names are never used.
+# Curated risky EXTERNAL APIs: libc/syscall IMPORT names, not the program's own
+# function names. A binary author still controls which imports/calls exist, so this
+# is a coverage heuristic (resists symbol renaming), not a security boundary.
 RISKY_APIS = {
     "fs": ["open", "openat", "fopen", "mkdir", "unlink", "rename", "creat", "fwrite"],
     "net": ["socket", "connect", "sendto", "send", "recv", "bind", "listen"],

@@ -198,7 +198,8 @@ decompiled before the model concludes.
 
 Policy (runner/coverage_policy.py, a separate testable module):
 1. list_imports -> keep a curated set of risky EXTERNAL APIs (libc/syscall
-   names the attacker does not control): fs (open/openat/fopen/mkdir/unlink/
+   are not the program's own function names; the author still controls which
+   imports/calls exist, so this is a coverage heuristic, not a boundary): fs (open/openat/fopen/mkdir/unlink/
    rename), net (socket/connect/sendto/send/recv/bind), proc (execve/fork/
    system/popen/ptrace). This uses IMPORT names, never the program's own
    function names.

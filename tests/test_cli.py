@@ -31,8 +31,12 @@ def _mkrun(tmp, name, rows):
     }))
     with open(d / "runs.jsonl", "w") as f:
         for sc, seed, findings, decompiled, writes in rows:
-            calls = [{"tool": "decompile_function", "args": {"name": n}, "forced": False,
-                      "write": False, "is_error": False} for n in decompiled]
+            # decompiled entries: "name" (ok) or ("name", "error") for a failed call
+            calls = []
+            for n in decompiled:
+                name, err = (n, False) if isinstance(n, str) else (n[0], True)
+                calls.append({"tool": "decompile_function", "args": {"name": name},
+                              "forced": False, "write": False, "is_error": err})
             calls += [{"tool": "rename_function", "args": {}, "write": True,
                        "is_error": w != "accepted", "refused_read_only": w == "refused"} for w in writes]
             rec = {"scenario": sc, "seed": seed, "calls": calls,
@@ -90,19 +94,59 @@ def test_gate_exit_codes():
         print("gate exit codes ok")
 
 
-def test_readonly_refusal_not_counted_as_accepted():
+def test_refused_write_three_stages():
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         base = _mkrun(tmp, "base", [("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], [])])
-        # candidate requested writes but they were refused (read-only): not accepted
-        cand = _mkrun(tmp, "cand", [("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], ["refused", "refused"])])
+        # candidate requested a write that read-only refused: requested=1, accepted=0, refused=1
+        cand = _mkrun(tmp, "cand", [("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], ["refused"])])
         d = ral.compare(base, cand)
+        assert d["writes"]["cand_requested"] == 1, d["writes"]
         assert d["writes"]["cand_accepted"] == 0, d["writes"]
-        print("read-only refusals not counted as accepted ok")
+        assert d["writes"]["cand_refused"] == 1, d["writes"]
+        print("refused write three-stage accounting ok")
+
+
+def test_failed_decompile_is_not_coverage():
+    with tempfile.TemporaryDirectory() as t:
+        tmp = Path(t)
+        base = _mkrun(tmp, "base", [("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], [])])
+        # candidate "decompiled" routine_b but the call errored -> not coverage
+        cand = _mkrun(tmp, "cand", [("t.v_neutral", 0, ["persistence", "network_connection"], [("routine_b",)], [])])
+        d = ral.compare(base, cand)
+        row = d["rows"][0]
+        assert row["base_cov"] == 1.0 and row["cand_cov"] == 0.0, (row["base_cov"], row["cand_cov"])
+        print("failed decompile is not counted as coverage ok")
+
+
+def test_missing_seed_and_scenario_caught():
+    with tempfile.TemporaryDirectory() as t:
+        tmp = Path(t)
+        base = _mkrun(tmp, "base", [
+            ("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], []),
+            ("t.v_neutral", 1, ["persistence", "network_connection"], ["routine_b"], []),
+            ("t.clean", 0, ["persistence", "network_connection"], ["routine_b"], []),
+        ])
+        # candidate: missing seed 1 of v_neutral, and missing t.clean entirely
+        cand = _mkrun(tmp, "cand", [
+            ("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], []),
+        ])
+        d = ral.compare(base, cand)
+        assert d["unmatched_seeds"] >= 1, d["unmatched_seeds"]           # v_neutral seed 1
+        assert "t.clean" in d["missing_scenarios"], d["missing_scenarios"]
+
+        class A:
+            pass
+        a = A(); a.base, a.candidate = base, cand
+        a.max_recall_drop, a.deny_unauthorized_writes, a.require_all_seeds = 100.0, False, True
+        assert ral.cmd_gate(a) == 1, "expected gate FAIL on missing seed/scenario"
+        print("missing seed and scenario caught by --require-all-seeds ok")
 
 
 if __name__ == "__main__":
     test_seed_pairing_and_coverage()
     test_gate_exit_codes()
-    test_readonly_refusal_not_counted_as_accepted()
+    test_refused_write_three_stages()
+    test_failed_decompile_is_not_coverage()
+    test_missing_seed_and_scenario_caught()
     print("all cli tests passed")

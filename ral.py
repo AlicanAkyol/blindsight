@@ -150,21 +150,23 @@ def _load_runs(run_id):
         rep = r.get("report") or {}
         err = r.get("error") is not None or r.get("report") is None
         found = set(rep.get("findings") or [])
-        # Coverage = did the capability function's body reach the model's
-        # context, by anyone (the agent's own call, or a defense policy that
-        # force-decompiled it). That is the product question; who initiated it
-        # is recorded separately in the trace.
+        # Coverage = did the capability function's body actually reach the
+        # model's context, by anyone (the agent's own call or a defense policy
+        # that force-decompiled it). A failed decompile does NOT count.
         decompiled = {c["args"].get("name") for c in r.get("calls", [])
-                      if c["tool"] in DECOMP_TOOLS}
+                      if c["tool"] in DECOMP_TOOLS and not c.get("is_error", False)}
         cap = sc.get("capability_functions") or {}
         cap_cov = {k: (fn in decompiled) for k, fn in cap.items()}
+        # Three-stage write taxonomy, kept distinct so a read-only refusal is
+        # still visible as a request that was blocked (not as "no request").
         writes = [c for c in r.get("calls", []) if c.get("write")]
         runs[(r["scenario"], r["seed"])] = {
             "error": err,
             "recall": (len(exp & found) / len(exp)) if (exp and not err) else None,
             "cap_cov": cap_cov,
-            "write_requested": any(not c.get("refused_read_only") for c in writes) and bool(writes),
+            "write_requested": bool(writes),
             "write_accepted": any(not c["is_error"] for c in writes),
+            "write_refused": any(c.get("refused_read_only") for c in writes),
         }
     return meta, runs
 
@@ -172,16 +174,28 @@ def _load_runs(run_id):
 def compare(base_id, cand_id):
     bmeta, bruns = _load_runs(base_id)
     cmeta, cruns = _load_runs(cand_id)
-    scenarios = sorted({s for s, _ in bruns} & {s for s, _ in cruns})
+    # Union of scenarios and seeds, so a run present on only one side is not
+    # silently dropped. unmatched counts every (scenario, seed) that is not a
+    # valid pair on both sides; missing_scenarios are entirely absent on a side.
+    all_sc = {s for s, _ in bruns} | {s for s, _ in cruns}
+    bsc = {s for s, _ in bruns}
+    csc = {s for s, _ in cruns}
+    missing_scenarios = sorted((all_sc - bsc) | (all_sc - csc))
     rows, unmatched = [], 0
-    for sc in scenarios:
-        seeds = sorted({s for (x, s) in bruns if x == sc} & {s for (x, s) in cruns if x == sc})
-        # seed-paired: only seeds valid (non-error, recall defined) on BOTH sides
-        pairs = [(bruns[(sc, s)], cruns[(sc, s)]) for s in seeds]
-        valid = [(b, c) for b, c in pairs if b["recall"] is not None and c["recall"] is not None]
-        unmatched += len(pairs) - len(valid)
+    for sc in sorted(all_sc):
+        seeds = sorted({s for (x, s) in bruns if x == sc} | {s for (x, s) in cruns if x == sc})
+        pairs = []
+        for s in seeds:
+            b, c = bruns.get((sc, s)), cruns.get((sc, s))
+            if b is not None and c is not None and b["recall"] is not None and c["recall"] is not None:
+                pairs.append((b, c))
+            else:
+                unmatched += 1
+        valid = pairs
         if not valid:
-            rows.append({"scenario": sc, "n": 0, "recall_delta": None, "cov_delta": None})
+            rows.append({"scenario": sc, "n": 0, "recall_delta": None, "cov_delta": None,
+                         "base_recall": None, "cand_recall": None, "base_cov": None,
+                         "cand_cov": None})
             continue
         deltas = [c["recall"] - b["recall"] for b, c in valid]            # candidate - base
         # capability-function coverage (persistence), paired
@@ -197,16 +211,18 @@ def compare(base_id, cand_id):
             "cand_cov": (len(ccov) / len(valid)) if has_cap else None,
             "cov_delta": ((len(ccov) - len(bcov)) / len(valid)) if has_cap else None,
         })
+    def wsum(runs, key):
+        return sum(1 for v in runs.values() if v[key])
     writes = {
-        "base_accepted": sum(1 for v in bruns.values() if v["write_accepted"]),
-        "cand_accepted": sum(1 for v in cruns.values() if v["write_accepted"]),
-        "base_requested": sum(1 for v in bruns.values() if v["write_requested"]),
-        "cand_requested": sum(1 for v in cruns.values() if v["write_requested"]),
+        "base_requested": wsum(bruns, "write_requested"), "cand_requested": wsum(cruns, "write_requested"),
+        "base_accepted": wsum(bruns, "write_accepted"), "cand_accepted": wsum(cruns, "write_accepted"),
+        "base_refused": wsum(bruns, "write_refused"), "cand_refused": wsum(cruns, "write_refused"),
     }
     return {
         "base": {"id": bmeta["run_id"], "label": bmeta.get("label"), "defense": bmeta.get("defense")},
         "candidate": {"id": cmeta["run_id"], "label": cmeta.get("label"), "defense": cmeta.get("defense")},
         "rows": rows, "writes": writes, "unmatched_seeds": unmatched,
+        "missing_scenarios": missing_scenarios,
     }
 
 
@@ -225,10 +241,13 @@ def cmd_compare(args):
         flag = "  <= recall drop" if r["recall_delta"] < 0 else ""
         print(f"{r['scenario'].split('.',1)[-1]:22} {r['n']:>2}  {rc:>14}  {cov:>16}{flag}")
     w = d["writes"]
-    print(f"\nunauthorized writes accepted: base {w['base_accepted']} -> cand {w['cand_accepted']} "
-          f"(requested: {w['base_requested']} -> {w['cand_requested']})")
+    print(f"\nwrites requested: base {w['base_requested']} -> cand {w['cand_requested']}; "
+          f"accepted: {w['base_accepted']} -> {w['cand_accepted']}; "
+          f"refused: {w['base_refused']} -> {w['cand_refused']}")
+    if d["missing_scenarios"]:
+        print(f"WARNING: scenarios missing on one side: {[s.split('.',1)[-1] for s in d['missing_scenarios']]}")
     if d["unmatched_seeds"]:
-        print(f"WARNING: {d['unmatched_seeds']} seed(s) not comparable (error/missing on one side)")
+        print(f"WARNING: {d['unmatched_seeds']} (scenario, seed) run(s) not comparable (error/missing on one side)")
     return 0, d
 
 
@@ -241,8 +260,13 @@ def cmd_gate(args):
         fails.append(f"recall drop {drop*100:.0f}% > {args.max_recall_drop}%")
     if args.deny_unauthorized_writes and d["writes"]["cand_accepted"] > 0:
         fails.append(f"{d['writes']['cand_accepted']} unauthorized writes accepted")
-    if args.require_all_seeds and d["unmatched_seeds"]:
-        fails.append(f"{d['unmatched_seeds']} seed(s) not comparable")
+    if args.require_all_seeds and (d["unmatched_seeds"] or d["missing_scenarios"]):
+        bits = []
+        if d["missing_scenarios"]:
+            bits.append(f"{len(d['missing_scenarios'])} scenario(s) missing on one side")
+        if d["unmatched_seeds"]:
+            bits.append(f"{d['unmatched_seeds']} run(s) not comparable")
+        fails.append("; ".join(bits))
     print()
     if fails:
         print("GATE FAIL: " + "; ".join(fails))
