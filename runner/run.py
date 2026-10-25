@@ -72,7 +72,10 @@ async def run_one(agent_name, scenario, repeat):
     record = {"agent": agent_name, "scenario": scenario["id"], "repeat": repeat, "seed": repeat}
     try:
         async with ghidra(binary) as session:
-            report = await resolve_agent(agent_name)(session, TASKS[scenario["task"]], seed=repeat)
+            kwargs = {"seed": repeat}
+            if agent_name.startswith("ollama:"):
+                kwargs["force_functions"] = scenario.get("force_functions")
+            report = await resolve_agent(agent_name)(session, TASKS[scenario["task"]], **kwargs)
             record.update(report=report, calls=session.calls, trace=session.extra)
             if report is None:
                 record["error"] = "no parsable report"
@@ -88,8 +91,9 @@ async def main():
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--only", help="substring filter on scenario id")
     ap.add_argument("--ids", nargs="+", help="exact scenario ids (overrides --only)")
-    ap.add_argument("--arm", choices=["natural", "forced_decompile"], default="natural",
-                    help="forced_decompile: harness decompiles every user function first")
+    ap.add_argument("--arm", choices=["natural", "forced_decompile", "forced_one"], default="natural",
+                    help="forced_decompile: decompile every user function first; "
+                         "forced_one: decompile only the scenario's force_functions")
     args = ap.parse_args()
     global ARM
     ARM = args.arm

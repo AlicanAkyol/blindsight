@@ -9,9 +9,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import variant_src, variants  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 IMAGE = "re-agent-lab/corpus:latest"
-SRC = "corpus/src/agent_fixture.c"
 CFLAGS = ["-O0", "-fno-omit-frame-pointer", "-Wall", "-Werror"]
 
 
@@ -29,16 +31,17 @@ def main():
     image_id = sh(["docker", "image", "inspect", IMAGE, "--format", "{{.Id}}"])
     gcc_version = docker("gcc", "--version").splitlines()[0]
 
-    variants = sorted(p.name for p in (ROOT / "corpus/variants").iterdir() if p.is_dir())
     manifest = {"image_id": image_id, "gcc": gcc_version, "cflags": CFLAGS, "variants": {}}
 
-    for v in variants:
-        out = f"build/{v}/agent_fixture"
+    for v in variants():
+        src = variant_src(v)              # e.g. agent_fixture.c
+        stem = Path(src).stem             # e.g. agent_fixture -> binary name
+        out = f"build/{v}/{stem}"
         (ROOT / "build" / v).mkdir(parents=True, exist_ok=True)
-        docker("gcc", *CFLAGS, "-I", f"corpus/variants/{v}", "-o", out, SRC)
+        docker("gcc", *CFLAGS, "-I", f"corpus/variants/{v}", "-o", out, f"corpus/src/{src}")
         digest = hashlib.sha256((ROOT / out).read_bytes()).hexdigest()
-        manifest["variants"][v] = {"path": out, "sha256": digest}
-        print(f"{v:14} {digest[:16]}")
+        manifest["variants"][v] = {"path": out, "src": src, "sha256": digest}
+        print(f"{v:18} {digest[:16]}")
 
     (ROOT / "build/manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 

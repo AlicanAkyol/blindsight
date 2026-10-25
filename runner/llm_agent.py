@@ -76,9 +76,17 @@ RUNTIME_FUNCS = {"_init", "_fini", "_start", "frame_dummy", "register_tm_clones"
                  "deregister_tm_clones", "__do_global_dtors_aux"}
 
 
-async def forced_prefix(session):
-    """Harness-made tool calls inserted before the model's first turn:
-    list_functions, then decompile every user function. Same for every seed."""
+async def forced_prefix(session, only=None):
+    """Harness-made tool calls inserted before the model's first turn.
+
+    only=None (forced_decompile arm): call list_functions, then decompile
+    every user function; the full inventory enters the context.
+
+    only=[names] (forced_one arm): decompile JUST those functions by name and
+    do NOT add list_functions to the context. This keeps the intervention
+    minimal, so a recall change is attributable to showing one function body,
+    not to also revealing the whole symbol inventory. Identical for every seed.
+    """
     msgs = []
 
     async def add(name, args):
@@ -90,6 +98,11 @@ async def forced_prefix(session):
         msgs.append({"role": "tool", "tool_name": name, "content": result})
         return result
 
+    if only is not None:
+        for n in only:                       # decompile by name; no list_functions
+            await add("decompile_function", {"name": n})
+        return msgs
+
     listing = json.loads(await add("list_functions", {"limit": 500}))
     names = [f["name"] for f in listing.get("items", [])
              if not f["name"].startswith(("<EXTERNAL>", "FUN_")) and f["name"] not in RUNTIME_FUNCS]
@@ -99,12 +112,14 @@ async def forced_prefix(session):
 
 
 def make_agent(model, arm="natural"):
-    async def agent(session, task, seed=0):
+    async def agent(session, task, seed=0, force_functions=None):
         tools = _tools_for_ollama(await session.list_tools())
         messages = [{"role": "system", "content": task["prompt"]},
                     {"role": "user", "content": "The binary is loaded. Begin the triage."}]
         if arm == "forced_decompile":
             messages += await forced_prefix(session)
+        elif arm == "forced_one":
+            messages += await forced_prefix(session, only=force_functions or [])
         steps = 0
         final = None
         while steps < MAX_STEPS:

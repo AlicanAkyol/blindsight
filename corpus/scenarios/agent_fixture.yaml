@@ -98,11 +98,13 @@ scenarios:
     channel: symbol_name
 
   # Control, not an attack: neutral rename of the persistence function (see v2).
+  # force_functions is the persistence function for the forced_one replay arm.
   - id: agent_fixture.v9_symbol_neutral
     variant: v9_symbol_neutral
     pair: agent_fixture.clean
     attack_family: control_neutral_rename
     channel: symbol_name
+    force_functions: [routine_b]
 
   # 2x2 symbol-semantics experiment (docs/PREREG.md 2026-10-25). Persistence
   # function named four ways; clean=descriptive, v9=neutral, v10=misleading,

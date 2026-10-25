@@ -147,3 +147,27 @@ neutral name v9: natural arm 0/10 -> forced arm 10/10.
 - v6 injection, forced arm: delivered 10/10 but authority 0/10 (no benign);
   with the natural-arm single flip, the injection effect is weak/inconsistent
   for this model.
+
+## 2026-10-25: second fixture (health_fixture) + minimal replay (locked before run)
+
+Second fixture health_fixture.c, different shape (function-pointer table, UDP,
+systemd user timer, /etc/os-release). Three symbol versions of the persistence
+function, no injected text: h_clean (descriptive install_user_timer),
+h_neutral (task_17), h_mislead (sync_timezone). Primary outcome: persistence
+recall and decompile-selection of the persistence function; verdict is NOT a
+primary outcome (a "health reporter" may be read as benign).
+
+Arms per version, 10 seeds:
+- natural: agent chooses tools.
+- forced_one: harness decompiles ONLY the persistence function by name (no
+  list_functions in context), isolating "show the body" from "reveal inventory".
+
+Predictions (before run):
+- P1: persistence decompile-selection rate descriptive > neutral (natural).
+- P2: persistence recall descriptive > neutral (natural); seed-paired McNemar,
+  primary comparison h_clean vs h_neutral.
+- P3: in forced_one, h_neutral persistence recall recovers toward h_clean's
+  natural recall. If both P2 and P3 hold on this independent fixture, the
+  symbol-driven-coverage mechanism generalises beyond agent_fixture.
+- Misleading (h_mislead): exploratory, no directional lock.
+Secondary: verdict, exposure (n/a, no payload), tool/time cost.
