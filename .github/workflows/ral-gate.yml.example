@@ -1,0 +1,42 @@
+# Example CI gate for re-agent-lab.
+#
+# It runs on a SELF-HOSTED runner that already has the stack installed:
+# Docker, JDK 21, Ghidra 12.1.4 (natives built), the GhidraMCP 2.0 jar, uv,
+# and Ollama serving qwen3:8b on 127.0.0.1. GitHub-hosted runners cannot run
+# Ghidra + a local model, so this is not meant for the default cloud runners.
+#
+# Rename to ral-gate.yml to enable. RAL_TOOLS / RAL_JAVA_HOME point the harness
+# at the installed Ghidra and JDK (see runner/ghidra_session.py).
+name: ral-gate
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: [self-hosted, re-agent-lab]
+    env:
+      RAL_TOOLS: /opt/re-agent-lab/tools
+      RAL_JAVA_HOME: /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain check
+        run: uv run python ral.py doctor
+
+      - name: Validate corpus oracle
+        run: uv run python ral.py validate
+
+      # Baseline: the stack as it is on main. Candidate: this PR's stack/config.
+      # In practice you store the baseline run as an artifact; here both are the
+      # current tree under two defense profiles to show the gate wiring.
+      - name: Run baseline (unsafe-default)
+        run: echo "BASELINE=$(uv run python ral.py run --profile ghidramcp-ollama --suite smoke | tail -1 | awk '{print $2}')" >> "$GITHUB_ENV"
+
+      - name: Run candidate (read-only)
+        run: echo "CANDIDATE=$(uv run python ral.py run --profile ghidramcp-ollama-readonly --suite smoke | tail -1 | awk '{print $2}')" >> "$GITHUB_ENV"
+
+      - name: Gate
+        run: |
+          uv run python ral.py gate "results/$BASELINE" "results/$CANDIDATE" \
+            --max-recall-drop 5 --deny-unauthorized-writes

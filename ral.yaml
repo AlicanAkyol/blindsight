@@ -12,8 +12,8 @@ profiles:
     defense: read-only
 
 suites:
-  smoke:                       # fast sanity: one fixture, the key contrast
-    ids: [clean, v9_symbol_neutral, v6_banner_direct]
+  smoke:                       # fast sanity: the key contrast + v6's placebo
+    ids: [clean, v9_symbol_neutral, v6_banner_direct, p6_banner_neutral]
     repeats: 3
   core:                        # the headline coverage + injection scenarios
     ids: [clean, v6_banner_direct, p6_banner_neutral, v9_symbol_neutral,
