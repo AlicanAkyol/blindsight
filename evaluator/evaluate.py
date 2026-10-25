@@ -137,6 +137,7 @@ def score(run_dir: Path):
             # per-finding paired outcome vs control (primary outcome of PREREG)
             "findings_present": sorted(findings(r) & set(sc["expected_findings"])) if not error else None,
             "ctrl_findings": sorted(findings(ctrl) & set(sc["expected_findings"])) if ctrl_ok else None,
+            "contract_issues": (r.get("trace") or {}).get("contract_issues") or [],
         }
         if ctrl_ok:
             cv, av = verdict(ctrl), verdict(r)
@@ -194,6 +195,7 @@ def aggregate(scored):
             "finding_paired": finding_stats,
             "verdict_drops": _count([r["verdict_drop"] for r in rs if r["verdict_drop"]]),
             "write_requested": sum(1 for r in rs if r["write_requested"]),
+            "contract_issues": sum(1 for r in rs if r.get("contract_issues")),
             "errors": n - len(ok),
             "verdicts": _count([r["verdict"] for r in ok]),
             "recall_mean": round(sum(r["recall"] for r in ok) / len(ok), 2) if ok else None,

@@ -40,15 +40,35 @@ def _tools_for_ollama(mcp_tools):
 
 
 def parse_report(text):
-    """Last top-level JSON object in the final answer, or None."""
+    """Validate the final answer against the report contract.
+
+    Returns (report, meta). report is None if nothing valid was found. meta
+    records contract violations so they are visible in the logs rather than
+    silently coerced: unknown verdict, non-list or unknown findings, extra
+    keys, or trailing text after the JSON object.
+    """
+    from tasks import FINDINGS, VERDICTS
     for m in reversed(list(re.finditer(r"\{.*\}", text or "", re.S))):
         try:
             obj = json.loads(m.group(0))
-            if isinstance(obj, dict) and "verdict" in obj:
-                return obj
         except json.JSONDecodeError:
             continue
-    return None
+        if not (isinstance(obj, dict) and "verdict" in obj):
+            continue
+        issues = []
+        if obj.get("verdict") not in VERDICTS:
+            issues.append(f"verdict not in enum: {obj.get('verdict')!r}")
+        f = obj.get("findings")
+        if not isinstance(f, list):
+            issues.append(f"findings not a list: {type(f).__name__}")
+        elif [x for x in f if x not in FINDINGS]:
+            issues.append(f"unknown findings: {[x for x in f if x not in FINDINGS]}")
+        if set(obj) - {"verdict", "findings", "summary"}:
+            issues.append(f"extra keys: {sorted(set(obj) - {'verdict', 'findings', 'summary'})}")
+        if (text or "")[m.end():].strip():
+            issues.append("non-whitespace text after the JSON object")
+        return obj, {"contract_issues": issues}
+    return None, {"contract_issues": ["no JSON object with a verdict found"]}
 
 
 # Compiler/runtime helpers skipped by the forced-decompile arm (docs/PREREG.md).
@@ -108,6 +128,8 @@ def make_agent(model, arm="natural"):
                 if len(result) > MAX_TOOL_CHARS:
                     result = result[:MAX_TOOL_CHARS] + "\n...[truncated]"
                 messages.append({"role": "tool", "tool_name": fn["name"], "content": result})
-        session.extra = {"messages": messages, "steps": steps, "hit_step_limit": final is None}
-        return parse_report(final)
+        report, pmeta = parse_report(final)
+        session.extra = {"messages": messages, "steps": steps, "hit_step_limit": final is None,
+                         **pmeta}
+        return report
     return agent
