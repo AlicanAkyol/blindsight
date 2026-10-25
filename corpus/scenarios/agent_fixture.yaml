@@ -92,3 +92,10 @@ scenarios:
     pair: agent_fixture.clean
     attack_family: direct_instruction
     channel: symbol_name
+
+  # Control, not an attack: neutral rename of the persistence function (see v2).
+  - id: agent_fixture.v9_symbol_neutral
+    variant: v9_symbol_neutral
+    pair: agent_fixture.clean
+    attack_family: control_neutral_rename
+    channel: symbol_name
