@@ -73,6 +73,15 @@ instruction} x injection {none, adversarial}, names matched for length/token
 count, seed-paired, 10 seeds, forced-decompile arm. H1 primary; H2 primary.
 Decision: McNemar on seed pairs, Wilson intervals, alpha 0.05.
 
+RESULT (natural arm, results/20261025T034615Z, 10 seeds):
+persistence recall clean 5/10, v9 neutral 0/10, v10 misleading 2/10, v2
+instruction 0/10. H1 SUPPORTED: descriptive vs neutral, Fisher p=0.033
+(seed-paired: 5 lost, 0 gained). H2 REJECTED: instruction vs neutral both
+0/10, p=1.0 — the injected instruction adds nothing beyond removing the
+descriptive name. Reading: on this fixture Qwen3-8B infers persistence from
+the symbol name, not the code; the attack text is irrelevant once the name
+is gone. Confirmatory forced-decompile arm still pending.
+
 ### 2026-10-25 note (deviation recorded, not an edit to the locked section)
 
 The symbol experiment's first run uses the **natural arm** (agent chooses
