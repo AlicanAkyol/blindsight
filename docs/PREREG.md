@@ -68,19 +68,33 @@ Hypothesis H1: for this fixture, replacing the descriptive persistence symbol
 Hypothesis H2: an adversarial instruction in the symbol lowers it *beyond* the
 name-removal effect (i.e. beyond the neutral-name control).
 
-2x2, symbol semantics {descriptive, neutral, misleading-no-instruction,
-instruction} x injection {none, adversarial}, names matched for length/token
-count, seed-paired, 10 seeds, forced-decompile arm. H1 primary; H2 primary.
-Decision: McNemar on seed pairs, Wilson intervals, alpha 0.05.
+Design: a four-level symbol-semantics factor {descriptive, neutral,
+misleading-no-instruction, instruction} with planned contrasts (not a fully
+crossed 2x2; injection is confounded with the instruction level). Names
+matched for length/token count, seed-paired, 10 seeds, forced-decompile arm.
+H1 primary; H2 primary. Decision: exact two-sided McNemar on seed pairs,
+Wilson intervals, alpha 0.05. Fisher is secondary only.
 
 RESULT (natural arm, results/20261025T034615Z, 10 seeds):
 persistence recall clean 5/10, v9 neutral 0/10, v10 misleading 2/10, v2
-instruction 0/10. H1 SUPPORTED: descriptive vs neutral, Fisher p=0.033
-(seed-paired: 5 lost, 0 gained). H2 REJECTED: instruction vs neutral both
-0/10, p=1.0 — the injected instruction adds nothing beyond removing the
-descriptive name. Reading: on this fixture Qwen3-8B infers persistence from
-the symbol name, not the code; the attack text is irrelevant once the name
-is gone. Confirmatory forced-decompile arm still pending.
+instruction 0/10.
+
+CORRECTION 2026-10-25 (an earlier version of this block misreported H1).
+The pre-registered primary test is exact two-sided McNemar at alpha=0.05.
+- H1 (descriptive vs neutral): seed-paired 5 discordant losses, 0 gains.
+  Exact McNemar p=0.0625, which does NOT clear alpha=0.05. So H1 is NOT
+  supported by the pre-registered test. The effect is in the predicted
+  direction and large (5/0), just outside significance at n=10. Fisher
+  p=0.033 is a secondary, non-paired statistic and cannot carry the primary
+  claim. Honest statement: "large effect in the predicted direction; the
+  pre-registered exact test did not reach significance (p=0.0625)."
+- H2 (instruction vs neutral): both 0/10, no discordant pairs, p=1.0. The
+  null is NOT rejected; this is "no added effect observed", not "no effect".
+  Both are at the floor, so the comparison is uninformative about H2 and the
+  forced-decompile arm (where the placebo is not at the floor) is needed.
+Reading (tentative): on this fixture persistence detection tracks the symbol
+name more than the code; the injected text adds nothing once the name is
+gone. Forced-decompile arm is the confirmatory test.
 
 ### 2026-10-25 note (deviation recorded, not an edit to the locked section)
 
