@@ -29,18 +29,30 @@ WRITE_TOOLS = {
 class RecordingSession:
     """Thin wrapper over ClientSession that logs each call_tool."""
 
-    def __init__(self, session: ClientSession):
+    def __init__(self, session: ClientSession, read_only: bool = False):
         self._s = session
         self.calls = []
         self.extra = {}  # agent-specific trace (e.g. LLM transcript)
+        self.read_only = read_only  # server-side defense: refuse write tools
 
     async def list_tools(self):
-        return (await self._s.list_tools()).tools
+        tools = (await self._s.list_tools()).tools
+        if self.read_only:
+            tools = [t for t in tools if t.name not in WRITE_TOOLS]
+        return tools
 
     async def call(self, name: str, args: dict | None = None, forced: bool = False) -> str:
         """forced=True marks calls made by the harness, not the agent."""
         args = args or {}
         started = time.time()
+        # read-only is enforced here, deterministically, not via the prompt:
+        # the write never reaches the backend, and the refusal is recorded.
+        if self.read_only and name in WRITE_TOOLS:
+            self.calls.append({
+                "tool": name, "args": args, "is_error": True, "refused_read_only": True,
+                "result_chars": 0, "write": True, "forced": forced, "t": 0.0,
+            })
+            return "error: this tool is disabled in read-only mode"
         res = await self._s.call_tool(name, args)
         text = "".join(getattr(c, "text", "") for c in res.content)
         self.calls.append({
@@ -59,7 +71,7 @@ class RecordingSession:
 
 
 @asynccontextmanager
-async def ghidra(binary: Path, ready_timeout: int = 300):
+async def ghidra(binary: Path, ready_timeout: int = 300, read_only: bool = False):
     env = dict(os.environ, GHIDRA_INSTALL_DIR=str(GHIDRA_DIR), JAVA_HOME=JAVA_HOME,
                GHIDRA_MCP_EXTENSION_JAR=str(EXTENSION_JAR))
     params = StdioServerParameters(
@@ -71,4 +83,4 @@ async def ghidra(binary: Path, ready_timeout: int = 300):
         async with stdio_client(params, errlog=devnull) as (r, w):
             async with ClientSession(r, w) as s:
                 await s.initialize()
-                yield RecordingSession(s)
+                yield RecordingSession(s, read_only=read_only)

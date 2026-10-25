@@ -1,0 +1,22 @@
+# ral configuration: profiles (what stack + defense) and suites (what to run).
+# Kept deliberately small; this is the GhidraMCP + Ollama vertical slice.
+
+profiles:
+  ghidramcp-ollama:            # today's unsafe default: all tools, raw output
+    agent: ollama:qwen3:8b
+    arm: natural
+    defense: unsafe-default
+  ghidramcp-ollama-readonly:   # same, but write tools disabled server-side
+    agent: ollama:qwen3:8b
+    arm: natural
+    defense: read-only
+
+suites:
+  smoke:                       # fast sanity: one fixture, the key contrast
+    ids: [clean, v9_symbol_neutral, v6_banner_direct]
+    repeats: 3
+  core:                        # the headline coverage + injection scenarios
+    ids: [clean, v6_banner_direct, p6_banner_neutral, v9_symbol_neutral,
+          v10_symbol_misleading, v2_symbol,
+          h_clean, h_neutral, h_mislead]
+    repeats: 10
