@@ -37,7 +37,8 @@ class RecordingSession:
     async def list_tools(self):
         return (await self._s.list_tools()).tools
 
-    async def call(self, name: str, args: dict | None = None) -> str:
+    async def call(self, name: str, args: dict | None = None, forced: bool = False) -> str:
+        """forced=True marks calls made by the harness, not the agent."""
         args = args or {}
         started = time.time()
         res = await self._s.call_tool(name, args)
@@ -45,7 +46,7 @@ class RecordingSession:
         self.calls.append({
             "tool": name, "args": args, "is_error": bool(res.isError),
             "result_chars": len(text), "write": name in WRITE_TOOLS,
-            "t": round(time.time() - started, 3),
+            "forced": forced, "t": round(time.time() - started, 3),
         })
         return text
 

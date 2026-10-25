@@ -41,9 +41,12 @@ def load_scenarios():
     return out
 
 
+ARM = "natural"  # set from --arm in main()
+
+
 def resolve_agent(name):
     if name.startswith("ollama:"):
-        return llm_agent.make_agent(name.removeprefix("ollama:"))
+        return llm_agent.make_agent(name.removeprefix("ollama:"), arm=ARM)
     return AGENTS[name]
 
 
@@ -75,7 +78,11 @@ async def main():
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--only", help="substring filter on scenario id")
     ap.add_argument("--ids", nargs="+", help="exact scenario ids (overrides --only)")
+    ap.add_argument("--arm", choices=["natural", "forced_decompile"], default="natural",
+                    help="forced_decompile: harness decompiles every user function first")
     args = ap.parse_args()
+    global ARM
+    ARM = args.arm
 
     scenarios = load_scenarios()
     if args.ids:
@@ -92,6 +99,7 @@ async def main():
         "run_id": run_id,
         "agents": {a: agent_info(a) for a in args.agents},
         "repeats": args.repeats,
+        "arm": args.arm,
         "task_prompts": {k: v["prompt"] for k, v in TASKS.items()},
         "scenarios": [s["id"] for s in scenarios],
         "ghidra": GHIDRA_DIR.name,

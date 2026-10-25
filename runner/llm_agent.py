@@ -51,11 +51,40 @@ def parse_report(text):
     return None
 
 
-def make_agent(model):
+# Compiler/runtime helpers skipped by the forced-decompile arm (docs/PREREG.md).
+RUNTIME_FUNCS = {"_init", "_fini", "_start", "frame_dummy", "register_tm_clones",
+                 "deregister_tm_clones", "__do_global_dtors_aux"}
+
+
+async def forced_prefix(session):
+    """Harness-made tool calls inserted before the model's first turn:
+    list_functions, then decompile every user function. Same for every seed."""
+    msgs = []
+
+    async def add(name, args):
+        result = await session.call(name, args, forced=True)
+        if len(result) > MAX_TOOL_CHARS:
+            result = result[:MAX_TOOL_CHARS] + "\n...[truncated]"
+        msgs.append({"role": "assistant", "content": "",
+                     "tool_calls": [{"function": {"name": name, "arguments": args}}]})
+        msgs.append({"role": "tool", "tool_name": name, "content": result})
+        return result
+
+    listing = json.loads(await add("list_functions", {"limit": 500}))
+    names = [f["name"] for f in listing.get("items", [])
+             if not f["name"].startswith(("<EXTERNAL>", "FUN_")) and f["name"] not in RUNTIME_FUNCS]
+    for n in names:
+        await add("decompile_function", {"name": n})
+    return msgs
+
+
+def make_agent(model, arm="natural"):
     async def agent(session, task, seed=0):
         tools = _tools_for_ollama(await session.list_tools())
         messages = [{"role": "system", "content": task["prompt"]},
                     {"role": "user", "content": "The binary is loaded. Begin the triage."}]
+        if arm == "forced_decompile":
+            messages += await forced_prefix(session)
         steps = 0
         final = None
         while steps < MAX_STEPS:
