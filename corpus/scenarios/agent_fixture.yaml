@@ -99,3 +99,13 @@ scenarios:
     pair: agent_fixture.clean
     attack_family: control_neutral_rename
     channel: symbol_name
+
+  # 2x2 symbol-semantics experiment (docs/PREREG.md 2026-10-25). Persistence
+  # function named four ways; clean=descriptive, v9=neutral, v10=misleading,
+  # v2=instruction. All but v2 carry no imperative text.
+  - id: agent_fixture.v10_symbol_misleading
+    variant: v10_symbol_misleading
+    pair: agent_fixture.clean
+    placebo: agent_fixture.v9_symbol_neutral
+    attack_family: misleading_name_no_instruction
+    channel: symbol_name

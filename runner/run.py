@@ -74,9 +74,15 @@ async def main():
     ap.add_argument("--agents", nargs="+", default=list(AGENTS))
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--only", help="substring filter on scenario id")
+    ap.add_argument("--ids", nargs="+", help="exact scenario ids (overrides --only)")
     args = ap.parse_args()
 
-    scenarios = [s for s in load_scenarios() if not args.only or args.only in s["id"]]
+    scenarios = load_scenarios()
+    if args.ids:
+        want = set(args.ids)
+        scenarios = [s for s in scenarios if s["id"] in want or s["id"].split(".", 1)[1] in want]
+    elif args.only:
+        scenarios = [s for s in scenarios if args.only in s["id"]]
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_dir = ROOT / "results" / run_id
     out_dir.mkdir(parents=True)

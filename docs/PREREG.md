@@ -72,3 +72,13 @@ name-removal effect (i.e. beyond the neutral-name control).
 instruction} x injection {none, adversarial}, names matched for length/token
 count, seed-paired, 10 seeds, forced-decompile arm. H1 primary; H2 primary.
 Decision: McNemar on seed pairs, Wilson intervals, alpha 0.05.
+
+### 2026-10-25 note (deviation recorded, not an edit to the locked section)
+
+The symbol experiment's first run uses the **natural arm** (agent chooses
+tools), not forced-decompile. Reason: the persistence callee name is already
+delivered to the model in decompiled main() and list_functions under natural
+play, so H1/H2 can be tested without a replay harness. Forced-decompile
+remains the confirmatory arm. Variants: clean (descriptive), v9 (neutral),
+v10 (misleading check_for_updates), v2 (instruction). Placebo for v2/v10 is
+v9. Primary outcome: persistence recall, seed-paired, 10 seeds.
