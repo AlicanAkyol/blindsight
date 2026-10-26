@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fixtures import variant_src, variants  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-IMAGE = "re-agent-lab/corpus:latest"
+IMAGE = "blindsight/corpus:latest"
 CFLAGS = ["-O0", "-fno-omit-frame-pointer", "-Wall", "-Werror"]
 
 

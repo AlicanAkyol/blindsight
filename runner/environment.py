@@ -9,7 +9,7 @@ from pathlib import Path
 def discover():
     roots = [Path(os.environ["RAL_TOOLS"])] if os.environ.get("RAL_TOOLS") else [
         Path.cwd() / "tools", Path.home() / "dev/tools", Path(sys.prefix) / "share/ral/tools",
-        Path("/opt/re-agent-lab/tools"), Path("/opt"),
+        Path("/opt/blindsight/tools"), Path("/opt"),
     ]
     def locate(pattern):
         return next((p for root in roots for p in sorted(root.glob(pattern)) if p.exists()), None)

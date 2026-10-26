@@ -24,8 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fixtures import groups, variant_src  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-IMAGE = "re-agent-lab/corpus:latest"
-TRACE_IMAGE = "re-agent-lab/trace:latest"
+IMAGE = "blindsight/corpus:latest"
+TRACE_IMAGE = "blindsight/trace:latest"
 
 # Per-source: the baseline trace must show these, else the syscall layer is blind.
 EXPECTED_SYSCALLS = {

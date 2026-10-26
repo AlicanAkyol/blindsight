@@ -117,7 +117,7 @@ def diagnose(cfg, profile=None, target=None):
             checks.append((key, bool(p and (p / file if file else p).is_file()),
                            f"set tools.{key} in .ral.yaml (see docs/quickstart.md)"))
         checks.append(("Python Ghidra dependencies", bool(importlib.util.find_spec("mcp") and
-                       importlib.util.find_spec("ghidra_mcp")), "install re-agent-lab[ghidra]"))
+                       importlib.util.find_spec("ghidra_mcp")), "install blindsight[ghidra]"))
         profiles = cfg.get("profiles", {})
         if profile not in profiles:
             raise ValueError(f"unknown profile {profile!r}; available: {', '.join(profiles)}")

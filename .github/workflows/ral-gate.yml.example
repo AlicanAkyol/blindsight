@@ -1,4 +1,4 @@
-# Example CI gate for re-agent-lab.
+# Example CI gate for blindsight.
 #
 # It runs on a SELF-HOSTED runner that already has the stack installed:
 # Docker, JDK 21, Ghidra 12.1.4 (natives built), the GhidraMCP 2.0 jar, uv,
@@ -14,9 +14,9 @@ on:
 
 jobs:
   gate:
-    runs-on: [self-hosted, re-agent-lab]
+    runs-on: [self-hosted, blindsight]
     env:
-      RAL_TOOLS: /opt/re-agent-lab/tools
+      RAL_TOOLS: /opt/blindsight/tools
       RAL_JAVA_HOME: /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
     steps:
       - uses: actions/checkout@v5

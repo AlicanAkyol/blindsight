@@ -75,8 +75,8 @@ Markdown and HTML in `.ral/results/<id>/`. A quick pass is a smoke-test result,
 not a security certificate. External telemetry is labelled as target-reported;
 missing telemetry does not silently pass coverage/authority checks.
 
-Status: beta. The Python package and CLI are still named `re-agent-lab` /
-`ral`. Independent clean-machine testing is pending.
+Status: beta. The package is `blindsight`; its command is `ral`.
+Independent clean-machine testing is pending.
 
 ## What it measures
 

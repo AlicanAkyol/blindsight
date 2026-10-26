@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from re_agent_lab import cases, diagnostics
+from blindsight import cases, diagnostics
 
 
 class ReleaseTests(unittest.TestCase):

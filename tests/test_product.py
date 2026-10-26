@@ -11,7 +11,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from re_agent_lab import product, reporting
+from blindsight import product, reporting
 
 BIN = os.environ.get("RAL_TEST_BIN", str(Path(sys.executable).parent / "ral"))
 ADAPTER = '''import json, sys
@@ -139,7 +139,7 @@ class ProductTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;", path.read_text())
 
     def test_external_response_schema_and_timeout(self):
-        from re_agent_lab.runner.external import validate_response, run_one
+        from blindsight.runner.external import validate_response, run_one
         with self.assertRaises(ValueError):
             validate_response({"protocol":"ral.target.v1", "report":{
                 "verdict":"invalid", "findings":[], "summary":"x"}})

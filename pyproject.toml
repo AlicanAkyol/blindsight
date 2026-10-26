@@ -1,5 +1,5 @@
 [project]
-name = "re-agent-lab"
+name = "blindsight"
 version = "0.3.0"
 description = "Adversarial benchmark and harness for LLM-assisted reverse engineering setups"
 requires-python = ">=3.10,<3.14"
@@ -15,17 +15,17 @@ ghidra = [
 ]
 
 [project.scripts]
-ral = "re_agent_lab.product:main"
+ral = "blindsight.product:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["re_agent_lab", "re_agent_lab.runner", "re_agent_lab.evaluator", "re_agent_lab.corpus"]
-package-dir = {re_agent_lab = "."}
+packages = ["blindsight", "blindsight.runner", "blindsight.evaluator", "blindsight.corpus"]
+package-dir = {blindsight = "."}
 include-package-data = false
 
 [tool.setuptools.package-data]
-re_agent_lab = ["ral.yaml", "docker/Dockerfile", "docker/Dockerfile.trace"]
-"re_agent_lab.corpus" = ["scenarios/*.yaml", "src/*.c", "variants/*/variant.h", "variants/*/SRC", "artifacts/*.json", "artifacts/*/agent_fixture", "artifacts/*/health_fixture"]
+blindsight = ["ral.yaml", "docker/Dockerfile", "docker/Dockerfile.trace"]
+"blindsight.corpus" = ["scenarios/*.yaml", "src/*.c", "variants/*/variant.h", "variants/*/SRC", "artifacts/*.json", "artifacts/*/agent_fixture", "artifacts/*/health_fixture"]
