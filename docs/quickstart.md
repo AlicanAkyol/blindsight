@@ -37,7 +37,8 @@ ral check --html report.html --json report.json --markdown report.md
 An adapter receives a versioned JSON request on stdin, analyses the absolute
 binary path with your agent, and writes one JSON response to stdout. Logs go
 to stderr. The protocol and a small adapter template are in
-[target-protocol.md](target-protocol.md) and `examples/target_adapter.py`.
+[target-protocol.md](target-protocol.md) and `examples/target_adapter.py`;
+`examples/openai_compatible_agent.py` is a working GhidraMCP + local LLM adapter.
 RAL passes the binary, frozen task prompt and seed. It never supplies ground
 truth, expected findings or the control relationship to the target.
 

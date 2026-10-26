@@ -58,6 +58,13 @@ then `ral init`, `ral doctor`, `ral check`. `init` discovers local tools;
 missing paths go in `.ral.yaml`. Prepared ELF fixtures are included and
 hash-checked, so a standard check does not require a Docker rebuild.
 
+Already drive GhidraMCP with a local LLM? [examples/openai_compatible_agent.py](examples/openai_compatible_agent.py)
+is a working adapter for any OpenAI-compatible server with tool calling
+(Ollama, LM Studio, llama.cpp, vLLM). Put the model name and Ghidra paths in
+the target's `env` in `.ral.yaml`, then `ral check`. It reports every
+GhidraMCP call it makes, so coverage is measured. To check your own agent,
+copy it and replace the agent loop.
+
 **[First report and troubleshooting](docs/quickstart.md)** ·
 **[Connect your agent](docs/target-protocol.md)** ·
 **[Release evidence and persistent cases](docs/release-checks.md)** · `ral --help`

@@ -79,3 +79,7 @@ exit code produce a recorded execution error, never a successful check.
 
 See `examples/target_adapter.py` for the integration boundary; it deliberately
 requires you to connect your actual agent rather than returning a fake pass.
+`examples/openai_compatible_agent.py` is a complete adapter: an LLM on any
+OpenAI-compatible endpoint drives GhidraMCP headless, every MCP call is
+recorded, and `RAL_AGENT_READ_ONLY=1` refuses write tools before they reach
+Ghidra. Its docstring has the `.ral.yaml` target configuration.

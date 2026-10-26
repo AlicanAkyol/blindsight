@@ -28,6 +28,7 @@ jobs:
         run: |
           /tmp/ral-test/bin/python tests/test_stats.py
           /tmp/ral-test/bin/python tests/test_cli.py
+          /tmp/ral-test/bin/python tests/test_example_agent.py
       - name: Published numbers reproduce from evidence logs
         run: /tmp/ral-test/bin/python evidence/recompute.py
   action-external-target:
