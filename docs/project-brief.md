@@ -37,7 +37,6 @@ paths. Those are different measurement protocols, not interchangeable results.
 
 ## Inspect it
 
-- [Two-minute demo script](demo-script.md)
 - [Runnable walkthrough](demo.md)
 - [Published evidence](../evidence/README.md)
 - [Measurement definitions](measurement.md)
