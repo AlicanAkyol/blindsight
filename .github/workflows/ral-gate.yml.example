@@ -19,7 +19,7 @@ jobs:
       RAL_TOOLS: /opt/re-agent-lab/tools
       RAL_JAVA_HOME: /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Toolchain check
         run: uv run python ral.py doctor

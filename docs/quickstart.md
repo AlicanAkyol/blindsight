@@ -10,14 +10,14 @@ its results. Start with `quick`, then save a baseline before changing your agent
 Python 3.10–3.13 and uv are required. The package is not on PyPI yet.
 
 ```sh
-uv tool install /path/to/re-agent-lab
+uv tool install /path/to/blindsight
 ral --version
 ```
 
 For the bundled GhidraMCP + local Ollama runner:
 
 ```sh
-uv tool install '/path/to/re-agent-lab[ghidra]'
+uv tool install '/path/to/blindsight[ghidra]'
 ```
 
 Or install the local wheel with `pipx install /path/to/re_agent_lab-0.3.0-py3-none-any.whl`.
@@ -151,7 +151,7 @@ the harmless fixtures in Docker with networking disabled and sandbox writes.
 ## Troubleshooting
 
 - **Unknown command `ral`:** use `uv tool update-shell`, reopen the terminal,
-  or run `uv tool run --from /path/to/re-agent-lab ral --help`.
+  or run `uv tool run --from /path/to/blindsight ral --help`.
 - **Missing Python Ghidra dependencies:** install the `[ghidra]` extra.
 - **Missing tools:** set `tools` in `.ral.yaml`; `doctor` prints the missing item.
 - **No telemetry:** export `calls` using the adapter protocol; findings alone

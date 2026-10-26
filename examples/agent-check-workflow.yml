@@ -1,4 +1,4 @@
-# After public release, a versioned uses: AlicanAkyol/re-agent-lab@vX can
+# After public release, a versioned uses: AlicanAkyol/blindsight@vX can
 # replace the local action. This example assumes RAL is checked out at tools/ral.
 name: Check RE agent
 on: [workflow_dispatch]
@@ -8,7 +8,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # Install YOUR local agent and its dependencies here.
       # The adapter must invoke your real agent, not a fixed-answer stub.
       - uses: ./tools/ral
@@ -16,7 +16,7 @@ jobs:
         with:
           target-command: python adapters/my_agent.py
           suite: quick
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always() && steps.ral.outputs.reports != ''
         with:
           name: ral-report

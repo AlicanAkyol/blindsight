@@ -1,11 +1,47 @@
-# re-agent-lab
+# blindsight
 
-Check your own AI reverse-engineering agent, get an evidence report, and
-catch coverage/recall regressions before changing your stack.
+**Rename one function and your AI reverse-engineering agent may never read it.**
 
-From the local checkout (not yet published to PyPI):
+blindsight is a regression harness for LLM-assisted reverse engineering
+(Ghidra + GhidraMCP today). It feeds the agent binaries that differ only in a
+symbol name or a piece of data, verified **behaviour-equivalent**, and records
+what the agent reads, what it concludes, and which tools it tries to use. The
+`ral` CLI turns that into a CI gate for model, MCP, prompt or defense changes.
+
+## The finding
+
+A function that installs persistence was named `install_autostart`, then
+renamed to `routine_b` with the code byte-for-byte unchanged. With the neutral
+name, the agent (Qwen3-8B via Ollama, Ghidra 12.1.4 + GhidraMCP 2.0) found
+persistence in **0 of 10** runs (descriptive name: 5/10; exact McNemar
+p=0.0625, just outside significance) and **never decompiled the function in
+any of the 10**. It picks what to read by name.
+
+Putting the code in front of the model brings recall back to 10/10: all
+decompiled bodies on the first fixture, and only the one persistence function
+on a second, independently structured fixture (2/10 → 10/10, McNemar
+p=0.008). It is a *coverage* failure, not a comprehension failure. A coverage-aware policy that
+selects functions by imported-API xrefs instead of names closes the gap
+(seed-paired, 10 seeds per scenario):
+
+| scenario | persistence function in context | capability recall |
+|---|---|---|
+| clean (descriptive) | 0.00 → 1.00 | 0.83 → 0.97 |
+| v9 (neutral name) | 0.00 → 1.00 | 0.60 → 1.00 |
+| h_clean (descriptive) | 0.10 → 1.00 | 0.47 → 1.00 |
+| h_neutral (neutral name) | 0.00 → 1.00 | 0.47 → 1.00 |
+
+These are pilot numbers: one model, one toolchain, two small hand-written
+fixtures, and a defense designed after seeing them (in-sample). Hypotheses,
+including the null and non-significant results, are pre-registered in
+[docs/PREREG.md](docs/PREREG.md).
+
+## Quick start
+
+From a clone (not yet on PyPI):
 
 ```sh
+git clone https://github.com/AlicanAkyol/blindsight && cd blindsight
 uv tool install .                       # external-agent adapter; lightweight
 ral init --target-command 'python /absolute/path/to/your_adapter.py'
 ral doctor
@@ -39,21 +75,8 @@ Markdown and HTML in `.ral/results/<id>/`. A quick pass is a smoke-test result,
 not a security certificate. External telemetry is labelled as target-reported;
 missing telemetry does not silently pass coverage/authority checks.
 
-A regression harness for LLM-assisted reverse-engineering setups (Ghidra +
-GhidraMCP today). It measures whether **behaviour-equivalent** changes to a
-binary — a renamed function, an added string, attacker-controlled text — quietly
-change what an AI agent analyses, what it concludes, and what tools it is willing
-to invoke.
-
-The headline question is not only "can the model be prompt-injected" but the
-sharper one this harness surfaced: **a semantically neutral rename of a
-capability function can make the agent skip that function entirely and miss the
-capability**, with the code byte-for-byte unchanged.
-
-Status: local beta with a wheel-installable `ral` CLI, a user-agent adapter,
-and a built-in GhidraMCP + Ollama runner. Findings are pre-registered
-(`docs/PREREG.md`) and include negative and null results. Public publication
-and independent clean-machine beta testing are still pending.
+Status: beta. The Python package and CLI are still named `re-agent-lab` /
+`ral`. Independent clean-machine testing is pending.
 
 ## What it measures
 
