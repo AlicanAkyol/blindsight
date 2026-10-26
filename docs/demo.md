@@ -1,5 +1,11 @@
 # A short technical walkthrough
 
+[Watch the demo video (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4).
+The video is silent, with Turkish on-screen explanations. It captures actual
+installed-CLI command output and the HTML report generated during the recording.
+The comparison uses published historical runs, not new model inference. Local
+path prefixes are normalized in the display; measured results are unchanged.
+
 This is an RE-agent evaluation project, not a malware detector or security
 certificate. The demonstration is a name-sensitive coverage failure and a
 controlled recovery intervention, with explicit pilot limits.

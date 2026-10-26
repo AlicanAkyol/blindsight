@@ -93,7 +93,8 @@ missing telemetry does not silently pass coverage/authority checks.
 Status: v0.4.0 beta. The package is `blindsight`; its command is `ral`.
 Independent clean-machine testing is pending.
 
-**[Technical walkthrough](docs/demo.md)** ·
+**[Watch the demo (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4)** ·
+**[Runnable walkthrough](docs/demo.md)** ·
 **[Measurement definitions and compatibility](docs/measurement.md)** ·
 **[Project brief](docs/project-brief.md)**
 
