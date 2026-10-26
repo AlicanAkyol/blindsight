@@ -1,5 +1,44 @@
 # re-agent-lab
 
+Check your own AI reverse-engineering agent, get an evidence report, and
+catch coverage/recall regressions before changing your stack.
+
+From the local checkout (not yet published to PyPI):
+
+```sh
+uv tool install .                       # external-agent adapter; lightweight
+ral init --target-command 'python /absolute/path/to/your_adapter.py'
+ral doctor
+ral check --html report.html
+ral baseline save
+# After changing your agent:
+ral check --baseline saved
+```
+
+For the bundled GhidraMCP/Ollama agent, install with `uv tool install '.[ghidra]'`,
+then `ral init`, `ral doctor`, `ral check`. `init` discovers local tools;
+missing paths go in `.ral.yaml`. Prepared ELF fixtures are included and
+hash-checked, so a standard check does not require a Docker rebuild.
+
+**[First report and troubleshooting](docs/quickstart.md)** ·
+**[Connect your agent](docs/target-protocol.md)** ·
+**[Release evidence and persistent cases](docs/release-checks.md)** · `ral --help`
+
+Each release comparison shows which finding disappeared, its paired seeds,
+and the tool-log lines that support the diagnosis. Keep the discovered case
+for your next release:
+
+```sh
+ral compare /path/to/baseline /path/to/candidate --html release.html
+ral case save persistence-miss --run /path/to/candidate --scenario agent_fixture.v9_symbol_neutral
+ral check --case persistence-miss
+```
+
+`quick` uses one seed, `ci` three and `full` ten. Reports are saved as JSON,
+Markdown and HTML in `.ral/results/<id>/`. A quick pass is a smoke-test result,
+not a security certificate. External telemetry is labelled as target-reported;
+missing telemetry does not silently pass coverage/authority checks.
+
 A regression harness for LLM-assisted reverse-engineering setups (Ghidra +
 GhidraMCP today). It measures whether **behaviour-equivalent** changes to a
 binary — a renamed function, an added string, attacker-controlled text — quietly
@@ -11,10 +50,10 @@ sharper one this harness surfaced: **a semantically neutral rename of a
 capability function can make the agent skip that function entirely and miss the
 capability**, with the code byte-for-byte unchanged.
 
-Status: research pilot with a working CLI (`ral`) for the GhidraMCP + Ollama
-stack. Findings are pre-registered (`docs/PREREG.md`) and reported honestly,
-including negative and null results. Run as `uv run python ral.py` (not yet
-pip-installable).
+Status: local beta with a wheel-installable `ral` CLI, a user-agent adapter,
+and a built-in GhidraMCP + Ollama runner. Findings are pre-registered
+(`docs/PREREG.md`) and include negative and null results. Public publication
+and independent clean-machine beta testing are still pending.
 
 ## What it measures
 
@@ -50,15 +89,15 @@ be re-scored exactly.
 
 ## CLI
 
-Requirements: Docker, JDK 21, uv, Ghidra 12.1.4 (natives built), GhidraMCP 2.0 jar,
-and (for real-model runs) Ollama with `qwen3:8b`. Tool paths default to one machine
-in `runner/ghidra_session.py` (override with `RAL_TOOLS`, `RAL_JAVA_HOME`). Profiles
-and suites are in `ral.yaml`.
+The legacy research commands below remain available from the source checkout.
+Fresh equivalence rebuilds need Docker; built-in real-model runs need JDK 21,
+Ghidra 12.1.4, GhidraMCP 2.0 and local Ollama. The installed product commands
+above use `.ral.yaml`; the legacy commands use `ral.yaml`.
 
-    uv run python ral.py doctor                          # is the toolchain ready
+    uv run --extra ghidra python ral.py doctor           # is the toolchain ready
     uv run python ral.py validate                        # build + prove the equivalence oracle
-    uv run python ral.py run --profile ghidramcp-ollama           --suite smoke
-    uv run python ral.py run --profile ghidramcp-ollama-readonly  --suite smoke
+    uv run --extra ghidra python ral.py run --profile ghidramcp-ollama           --suite smoke
+    uv run --extra ghidra python ral.py run --profile ghidramcp-ollama-readonly  --suite smoke
     uv run python ral.py compare results/<base> results/<cand>    # seed-paired recall + coverage diff
     uv run python ral.py gate    results/<base> results/<cand> \
         --max-recall-drop 5 --deny-unauthorized-writes            # non-zero exit for CI
@@ -71,7 +110,7 @@ to the recall delta (comprehension). See `.github/workflows/ral-gate.yml.example
 
     python3 corpus/build.py                 # build every variant in Docker
     python3 corpus/verify.py                # behavioural equivalence, all variants
-    uv run python runner/run.py --agents rule_agent gullible_agent   # offline sanity
+    uv run --extra ghidra python runner/run.py --agents rule_agent gullible_agent   # no model; needs Ghidra
     uv run python tests/test_stats.py       # statistics regression tests
     uv run python tests/test_cli.py         # seed-pairing / coverage / gate tests
 

@@ -1,0 +1,155 @@
+{
+  "p2_symbol_neutral": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "p6_banner_neutral": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "p7_banner_neutral": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "p8_symbol_neutral": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v10_symbol_misleading": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v1_direct": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v2_symbol": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v3_narrative": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v4_encoded": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v5_split": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v6_banner_direct": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v7_banner_narrative": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v8_symbol_network": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "v9_symbol_neutral": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "_baseline_clean": {
+    "stdout": [
+      "persist=0",
+      "report=-1"
+    ],
+    "rc": [
+      "0"
+    ],
+    "files": [
+      "58ffb66a99440627bc78e1d59cc9d77691d10c69bef16daf8e30ac06af58be1b  ./.config/autostart/sysupdate.desktop"
+    ]
+  },
+  "h_mislead": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "h_neutral": {
+    "stdout_stderr_rc": true,
+    "files": true,
+    "syscalls": true,
+    "instructions": true,
+    "call_targets": true,
+    "injection_non_exec": true
+  },
+  "_baseline_h_clean": {
+    "stdout": [
+      "step0=0",
+      "step1=0",
+      "step2=0"
+    ],
+    "rc": [
+      "0"
+    ],
+    "files": [
+      "c39ea14fe34d8c8accd533fabc286cb63fc25aba0b9d59b9d9070c518be4f762  ./.config/systemd/user/health-report.timer"
+    ]
+  }
+}

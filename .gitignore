@@ -2,3 +2,7 @@
 __pycache__/
 build/
 results/
+.ral/
+.ral.yaml
+dist/
+*.egg-info/

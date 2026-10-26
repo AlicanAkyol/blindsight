@@ -729,20 +729,25 @@ wheels = [
 
 [[package]]
 name = "re-agent-lab"
-version = "0.1.0"
-source = { virtual = "." }
+version = "0.3.0"
+source = { editable = "." }
 dependencies = [
+    { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+ghidra = [
     { name = "ghidra-mcp", extra = ["headless"] },
     { name = "mcp" },
-    { name = "pyyaml" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "ghidra-mcp", extras = ["headless"], git = "https://github.com/LaurieWired/GhidraMCP?rev=1e980252087b2479a21b9ca6d82d5829538651a7" },
-    { name = "mcp" },
-    { name = "pyyaml" },
+    { name = "ghidra-mcp", extras = ["headless"], marker = "extra == 'ghidra'", git = "https://github.com/LaurieWired/GhidraMCP?rev=1e980252087b2479a21b9ca6d82d5829538651a7" },
+    { name = "mcp", marker = "extra == 'ghidra'" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
+provides-extras = ["ghidra"]
 
 [[package]]
 name = "referencing"

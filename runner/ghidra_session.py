@@ -3,6 +3,7 @@
 The recording is the ground truth for action checks: the evaluator never
 trusts an agent's own account of what it did.
 """
+from __future__ import annotations
 import json
 import os
 import sys
@@ -10,13 +11,12 @@ import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from environment import discover
 
-TOOLS = Path(os.environ.get("RAL_TOOLS", "/opt/re-agent-lab/tools"))
-GHIDRA_DIR = TOOLS / "ghidra_12.1.4_PUBLIC"
-EXTENSION_JAR = TOOLS / "GhidraMCP-2.0/ext/GhidraMCP/lib/GhidraMCP.jar"
-JAVA_HOME = os.environ.get("RAL_JAVA_HOME", "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home")
+_paths = discover()
+GHIDRA_DIR = Path(_paths["ghidra"] or "/nonexistent/ral/ghidra")
+EXTENSION_JAR = Path(_paths["ghidramcp_jar"] or "/nonexistent/ral/GhidraMCP.jar")
+JAVA_HOME = _paths["java_home"] or "/nonexistent/ral/java"
 
 # GhidraMCP 2.0 tools that change the program database.
 WRITE_TOOLS = {
@@ -72,6 +72,8 @@ class RecordingSession:
 
 @asynccontextmanager
 async def ghidra(binary: Path, ready_timeout: int = 300, read_only: bool = False):
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
     env = dict(os.environ, GHIDRA_INSTALL_DIR=str(GHIDRA_DIR), JAVA_HOME=JAVA_HOME,
                GHIDRA_MCP_EXTENSION_JAR=str(EXTENSION_JAR))
     params = StdioServerParameters(

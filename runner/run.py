@@ -16,6 +16,7 @@ import argparse
 import asyncio
 import json
 import platform
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -26,11 +27,10 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agents import AGENTS  # noqa: E402
-from ghidra_session import GHIDRA_DIR, ghidra  # noqa: E402
 import llm_agent  # noqa: E402
 from tasks import TASKS  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get("RAL_HOME", Path(__file__).resolve().parent.parent))
 GHIDRA_MCP_COMMIT = "1e980252087b2479a21b9ca6d82d5829538651a7"
 
 
@@ -67,8 +67,9 @@ def agent_info(name):
     return {"mock": True}
 
 
-async def run_one(agent_name, scenario, repeat):
-    binary = ROOT / "build" / scenario["variant"] / scenario["sample"]
+async def run_one(agent_name, scenario, repeat, binary_root=None, task_prompts=None):
+    from ghidra_session import ghidra
+    binary = Path(binary_root or ROOT) / "build" / scenario["variant"] / scenario["sample"]
     started = time.time()
     record = {"agent": agent_name, "scenario": scenario["id"], "repeat": repeat, "seed": repeat}
     try:
@@ -76,7 +77,8 @@ async def run_one(agent_name, scenario, repeat):
             kwargs = {"seed": repeat}
             if agent_name.startswith("ollama:"):
                 kwargs["force_functions"] = scenario.get("force_functions")
-            report = await resolve_agent(agent_name)(session, TASKS[scenario["task"]], **kwargs)
+            task = {"prompt": task_prompts[scenario["task"]]} if task_prompts else TASKS[scenario["task"]]
+            report = await resolve_agent(agent_name)(session, task, **kwargs)
             record.update(report=report, calls=session.calls, trace=session.extra)
             if report is None:
                 record["error"] = "no parsable report"
@@ -87,27 +89,44 @@ async def run_one(agent_name, scenario, repeat):
 
 
 async def run_suite(agents, ids=None, only=None, repeats=1, arm="natural",
-                    defense="unsafe-default", label=None):
+                    defense="unsafe-default", label=None, scenario_snapshot=None,
+                    seeds=None, binary_root=None, task_prompts=None):
     """Programmatic entry used by the ral CLI. Returns the run_id."""
     global ARM, DEFENSE
+    from ghidra_session import GHIDRA_DIR
     ARM, DEFENSE = arm, defense
 
-    scenarios = load_scenarios()
+    scenarios = list(scenario_snapshot) if scenario_snapshot is not None else load_scenarios()
     if ids:
         want = set(ids)
         scenarios = [s for s in scenarios if s["id"] in want or s["id"].split(".", 1)[1] in want]
     elif only:
         scenarios = [s for s in scenarios if only in s["id"]]
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if not scenarios:
+        raise ValueError("No scenarios selected; check suite IDs")
+    if repeats < 1:
+        raise ValueError("repeats must be at least 1")
+    seeds = list(range(repeats)) if seeds is None else list(seeds)
+    if not seeds or any(type(s) is not int or s < 0 for s in seeds) or len(set(seeds)) != len(seeds):
+        raise ValueError("seeds must be distinct non-negative integers")
+    if ids:
+        matched = {s["id"] for s in scenarios} | {s["id"].split(".", 1)[1] for s in scenarios}
+        if set(ids) - matched:
+            raise ValueError(f"Unknown scenario IDs: {sorted(set(ids) - matched)}")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     out_dir = ROOT / "results" / run_id
     out_dir.mkdir(parents=True)
 
-    manifest = json.loads((ROOT / "build/manifest.json").read_text())
+    artifact_root = Path(binary_root or ROOT)
+    if binary_root:
+        manifest = json.loads((artifact_root / "case.json").read_text())["corpus_manifest"]
+    else:
+        manifest = json.loads((ROOT / "build/manifest.json").read_text())
     meta = {
         "run_id": run_id, "label": label,
         "agents": {a: agent_info(a) for a in agents},
-        "repeats": repeats, "arm": arm, "defense": defense,
-        "task_prompts": {k: v["prompt"] for k, v in TASKS.items()},
+        "repeats": len(seeds), "seeds": seeds, "arm": arm, "defense": defense,
+        "task_prompts": task_prompts or {k: v["prompt"] for k, v in TASKS.items()},
         "scenarios": [s["id"] for s in scenarios],
         # Full resolved scenario objects, so re-scoring uses the definitions as
         # they were at run time, not whatever the YAML says later.
@@ -126,8 +145,8 @@ async def run_suite(agents, ids=None, only=None, repeats=1, arm="natural",
     with open(out_dir / "runs.jsonl", "w") as f:
         for agent in agents:
             for sc in scenarios:
-                for r in range(repeats):
-                    rec = await run_one(agent, sc, r)
+                for r in seeds:
+                    rec = await run_one(agent, sc, r, binary_root=binary_root, task_prompts=task_prompts)
                     f.write(json.dumps(rec) + "\n")
                     f.flush()
                     status = rec.get("error") or (rec["report"] or {}).get("verdict")

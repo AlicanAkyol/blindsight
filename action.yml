@@ -1,0 +1,79 @@
+name: RE Agent Lab
+description: Check an AI reverse-engineering agent and gate coverage/recall regressions.
+inputs:
+  target-command:
+    description: Argv command for your local ral.target.v1 adapter (no shell expansion).
+    required: false
+  config:
+    description: Existing .ral.yaml with your target or local Ghidra tools.
+    required: false
+  profile:
+    description: Built-in profile when not using an external target.
+    default: ghidramcp-ollama
+  suite:
+    description: quick, ci or full.
+    default: quick
+  baseline:
+    description: Directory containing a previously downloaded baseline run.
+    required: false
+  max-recall-drop:
+    description: Maximum recall regression in percentage points.
+    default: '5'
+  max-coverage-drop:
+    description: Maximum persistence-body coverage regression in percentage points.
+    default: '0'
+outputs:
+  reports:
+    description: Directory containing run logs and JSON/Markdown/HTML reports.
+    value: ${{ steps.check.outputs.reports }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    - name: Install RAL
+      shell: bash
+      env:
+        RAL_TARGET_COMMAND: ${{ inputs.target-command }}
+      run: |
+        if [ -n "$RAL_TARGET_COMMAND" ]; then
+          python -m pip install "$GITHUB_ACTION_PATH"
+        else
+          python -m pip install "$GITHUB_ACTION_PATH[ghidra]"
+        fi
+    - name: Check target and write job summary
+      id: check
+      shell: bash
+      env:
+        RAL_TARGET_COMMAND: ${{ inputs.target-command }}
+        RAL_CONFIG: ${{ inputs.config }}
+        RAL_PROFILE: ${{ inputs.profile }}
+        RAL_SUITE: ${{ inputs.suite }}
+        RAL_BASELINE: ${{ inputs.baseline }}
+        RAL_RECALL_DROP: ${{ inputs.max-recall-drop }}
+        RAL_COVERAGE_DROP: ${{ inputs.max-coverage-drop }}
+      run: |
+        set -euo pipefail
+        ral_job_dir=$(mktemp -d "$RUNNER_TEMP/ral-job.XXXXXX")
+        if [ -n "$RAL_CONFIG" ]; then
+          ral_config=$RAL_CONFIG
+        else
+          ral_config="$ral_job_dir/config.yaml"
+          if [ -n "$RAL_TARGET_COMMAND" ]; then
+            ral --config "$ral_config" init --target-command "$RAL_TARGET_COMMAND"
+          else
+            ral --config "$ral_config" init
+          fi
+        fi
+        ral_args=(--config "$ral_config" --state "$ral_job_dir/state" check
+          --suite "$RAL_SUITE" --profile "$RAL_PROFILE"
+          --json "$ral_job_dir/check.json" --html "$ral_job_dir/check.html"
+          --markdown "$ral_job_dir/check.md"
+          --max-recall-drop "$RAL_RECALL_DROP" --max-coverage-drop "$RAL_COVERAGE_DROP")
+        if [ -n "$RAL_BASELINE" ]; then ral_args+=(--baseline "$RAL_BASELINE"); fi
+        echo "reports=$ral_job_dir" >> "$GITHUB_OUTPUT"
+        ral_exit=0
+        ral "${ral_args[@]}" || ral_exit=$?
+        if [ -f "$ral_job_dir/check.md" ]; then cat "$ral_job_dir/check.md" >> "$GITHUB_STEP_SUMMARY"; fi
+        exit "$ral_exit"

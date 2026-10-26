@@ -23,14 +23,15 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / "runner"))
-sys.path.insert(0, str(ROOT / "evaluator"))
-sys.path.insert(0, str(ROOT / "corpus"))
+CODE_ROOT = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("RAL_HOME", CODE_ROOT))
+sys.path.insert(0, str(CODE_ROOT / "runner"))
+sys.path.insert(0, str(CODE_ROOT / "evaluator"))
+sys.path.insert(0, str(CODE_ROOT / "corpus"))
 
 
 def load_config():
-    return yaml.safe_load((ROOT / "ral.yaml").read_text())
+    return yaml.safe_load((CODE_ROOT / "ral.yaml").read_text())
 
 
 def _ok(b):
@@ -160,7 +161,8 @@ def _load_runs(run_id):
                       if c["tool"] in DECOMP_TOOLS and not c.get("is_error", False)
                       and c.get("result_chars", 0) > 0}
         cap = sc.get("capability_functions") or {}
-        cap_cov = {k: (fn in decompiled) for k, fn in cap.items()}
+        known = (r.get("trace") or {}).get("telemetry") != "unavailable"
+        cap_cov = {k: (fn in decompiled) if known else None for k, fn in cap.items()}
         # Three-stage write taxonomy, kept distinct so a read-only refusal is
         # still visible as a request that was blocked (not as "no request").
         writes = [c for c in r.get("calls", []) if c.get("write")]
@@ -237,17 +239,20 @@ def compare(base_id, cand_id):
             continue
         deltas = [c["recall"] - b["recall"] for b, c in valid]            # candidate - base
         # capability-function coverage (persistence), paired
-        bcov = [1 for b, _ in valid if b["cap_cov"].get("persistence")]
-        ccov = [1 for _, c in valid if c["cap_cov"].get("persistence")]
-        has_cap = any("persistence" in b["cap_cov"] for b, _ in valid)
+        cov_pairs = [(b, c) for b, c in valid if b["cap_cov"].get("persistence") is not None
+                     and c["cap_cov"].get("persistence") is not None]
+        bcov = [1 for b, _ in cov_pairs if b["cap_cov"]["persistence"]]
+        ccov = [1 for _, c in cov_pairs if c["cap_cov"]["persistence"]]
+        has_cap = bool(cov_pairs)
         rows.append({
             "scenario": sc, "n": len(valid),
             "base_recall": sum(b["recall"] for b, _ in valid) / len(valid),
             "cand_recall": sum(c["recall"] for _, c in valid) / len(valid),
             "recall_delta": sum(deltas) / len(deltas),
-            "base_cov": (len(bcov) / len(valid)) if has_cap else None,
-            "cand_cov": (len(ccov) / len(valid)) if has_cap else None,
-            "cov_delta": ((len(ccov) - len(bcov)) / len(valid)) if has_cap else None,
+            "coverage_pairs": len(cov_pairs),
+            "base_cov": (len(bcov) / len(cov_pairs)) if has_cap else None,
+            "cand_cov": (len(ccov) / len(cov_pairs)) if has_cap else None,
+            "cov_delta": ((len(ccov) - len(bcov)) / len(cov_pairs)) if has_cap else None,
         })
     def wsum(runs, key):
         return sum(1 for v in runs.values() if v[key])
@@ -328,7 +333,7 @@ def cmd_gate(args):
     return 0
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(prog="ral")
     sub = ap.add_subparsers(dest="cmd", required=True)
     dp = sub.add_parser("doctor")
@@ -348,7 +353,7 @@ def main():
     g.add_argument("--deny-unauthorized-writes", action="store_true")
     g.add_argument("--allow-incomplete", action="store_true",
                    help="do not fail on missing seeds/scenarios (strict by default)")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     if args.cmd == "doctor":
         return cmd_doctor(args)
