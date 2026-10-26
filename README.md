@@ -108,7 +108,7 @@ be re-scored exactly.
 - `evaluator/` — seed-paired per-finding and verdict McNemar, Wilson intervals,
   delivery/recognition/compliance, three-stage write metrics
 - `docs/PREREG.md`, `docs/RUBRIC.md` — pre-registered hypotheses and the verdict
-  rubric; `docs/STATUS.md` — running log
+  rubric
 
 ## CLI
 
