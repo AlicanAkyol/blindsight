@@ -134,7 +134,9 @@ Without a baseline, `check` exits 0 when all completed fixture checks pass,
 1 when measured checks find misses/unsupported findings/writes, and 2 when
 execution or telemetry is incomplete. With a baseline, `check` uses the
 strict regression gate; pre-existing misses can remain accepted, while new
-regressions fail. A passing result describes these tests, not a security
+regressions fail. That includes findings outside source ground truth: if the
+candidate reports more of them than the seed-paired baseline, the gate fails
+(`--max-unsupported-increase N` allows a rise of N per scenario; default 0). A passing result describes these tests, not a security
 certificate or proof that a write boundary exists.
 
 ## Fixture validation

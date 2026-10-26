@@ -231,7 +231,8 @@ def check(args, cfg, state):
     if args.baseline:
         b = state / "baseline" if args.baseline == "saved" else Path(args.baseline).expanduser().resolve()
         gate_args = argparse.Namespace(base=str(b), candidate=str(out), max_recall_drop=args.max_recall_drop,
-                     max_coverage_drop=args.max_coverage_drop, deny_unauthorized_writes=True, allow_incomplete=False)
+                     max_coverage_drop=args.max_coverage_drop, deny_unauthorized_writes=True, allow_incomplete=False,
+                     max_unsupported_increase=args.max_unsupported_increase)
         # With a baseline, observed regressions determine the result. Execution errors still fail.
         release = _release_files(b, out, state, gate_args)
         code = release["exit_code"]
@@ -243,7 +244,8 @@ def check(args, cfg, state):
 def _release_files(base, candidate, state, args):
     from . import diagnostics
     report = diagnostics.release_report(base, candidate, args.max_recall_drop, args.max_coverage_drop,
-                                        args.deny_unauthorized_writes, args.allow_incomplete)
+                                        args.deny_unauthorized_writes, args.allow_incomplete,
+                                        args.max_unsupported_increase)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     directory = state / "reports" / f"release-{stamp}"
     diagnostics.write(report, directory, getattr(args, "json", None),
@@ -318,6 +320,8 @@ def main(argv=None):
         p.add_argument("--baseline", help="saved, or a baseline run directory")
         p.add_argument("--max-recall-drop", type=float, default=5)
         p.add_argument("--max-coverage-drop", type=float, default=0)
+        p.add_argument("--max-unsupported-increase", type=int, default=0,
+                       help="allowed rise in seed-paired findings outside ground truth, per scenario")
     b = sub.add_parser("baseline", help="save or inspect the last run as a regression baseline")
     bs = b.add_subparsers(dest="action", required=True)
     save = bs.add_parser("save"); save.add_argument("run", nargs="?"); save.add_argument("--replace", action="store_true")
@@ -334,6 +338,8 @@ def main(argv=None):
         p.add_argument("base"); p.add_argument("candidate")
         p.add_argument("--max-recall-drop", type=float, default=5)
         p.add_argument("--max-coverage-drop", type=float, default=0)
+        p.add_argument("--max-unsupported-increase", type=int, default=0,
+                       help="allowed rise in seed-paired findings outside ground truth, per scenario")
         p.add_argument("--deny-unauthorized-writes", action="store_true")
         p.add_argument("--allow-incomplete", action="store_true")
         p.add_argument("--json", type=Path); p.add_argument("--markdown", type=Path); p.add_argument("--html", type=Path)

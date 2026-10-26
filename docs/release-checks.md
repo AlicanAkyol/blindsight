@@ -29,6 +29,11 @@ each group's details to inspect seed, original JSONL file/line and successful
 decompile call indices. Raw measurements remain in the source run directories.
 `release.json` retains every event even when Markdown groups examples.
 
+The gate also fails when the candidate reports more findings outside source
+ground truth than the seed-paired baseline did, even if recall and coverage are
+unchanged. Each new unsupported finding is listed with its seed and JSONL line.
+`--max-unsupported-increase N` allows a rise of N per scenario (default 0).
+
 Three observations are kept distinct:
 
 | Observation | What it supports | Next step |

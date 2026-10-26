@@ -10,6 +10,8 @@ name="routine_b" if b"routine_b" in body else "install_autostart"
 reply={"protocol":"ral.target.v1", "report": {
  "verdict":"malicious", "findings":["network_connection","persistence","host_info_collection"],
  "summary":"Simulated adapter for CLI integration testing only."}}
+if "--extra-findings" in sys.argv:
+ reply["report"]["findings"]+=["credential_access","process_injection"]
 if "--no-telemetry" not in sys.argv:
  reply["calls"]=[{"tool":"decompile_function", "args":{"name":name},
                   "write":False,"is_error":False,"result_chars":200}]

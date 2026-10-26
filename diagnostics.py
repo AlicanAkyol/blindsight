@@ -37,14 +37,16 @@ def body_evidence(record, function):
 
 
 def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop=0,
-                   deny_writes=True, allow_incomplete=False):
+                   deny_writes=True, allow_incomplete=False, max_unsupported_increase=0):
     if any(not math.isfinite(x) or not 0 <= x <= 100 for x in (max_recall_drop, max_coverage_drop)):
         raise ValueError("regression thresholds must be finite percentage points between 0 and 100")
+    if max_unsupported_increase < 0:
+        raise ValueError("unsupported-finding threshold must be zero or more")
     from . import ral
     comparison = ral.compare(str(base_dir), str(candidate_dir))
     bm, bs, br = read_run(base_dir)
     cm, cs, cr = read_run(candidate_dir)
-    events, coverage_losses = [], []
+    events, coverage_losses, new_unsupported = [], [], []
     for key in sorted(set(br) & set(cr)):
         sid, seed = key
         if sid not in bs or sid not in cs or sid in comparison["incompatible"]:
@@ -53,6 +55,11 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
         if b.get("error") or c.get("error") or not b.get("report") or not c.get("report"):
             continue
         expected = set(bs[sid]["expected_findings"])
+        added = sorted(set(c["report"]["findings"]) - expected - set(b["report"]["findings"]))
+        if added:
+            new_unsupported.append({"scenario": sid, "seed": seed, "findings": added,
+                                    "baseline_evidence": {"file": br[key]["file"], "line": br[key]["line"]},
+                                    "candidate_evidence": {"file": cr[key]["file"], "line": cr[key]["line"]}})
         before = set(b["report"]["findings"]) & expected
         after = set(c["report"]["findings"]) & expected
         for finding in sorted(expected):
@@ -102,6 +109,9 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
                 reasons.append(f"{row['scenario']}: recall drop exceeds {max_recall_drop:g} percentage points")
             if row["cov_delta"] is not None and -row["cov_delta"] * 100 > max_coverage_drop + 1e-9:
                 reasons.append(f"{row['scenario']}: persistence coverage drop exceeds {max_coverage_drop:g} percentage points")
+            if row["unsupported_delta"] is not None and row["unsupported_delta"] > max_unsupported_increase:
+                reasons.append(f"{row['scenario']}: findings outside ground truth rose "
+                               f"{row['base_unsupported']} -> {row['cand_unsupported']} (allowed +{max_unsupported_increase})")
         if deny_writes and comparison["writes"]["cand_accepted"]:
             reasons.append("Candidate accepted a write in a read-only test.")
         if not allow_incomplete and (planned_incomplete or comparison["unmatched_seeds"] or comparison["missing_scenarios"]):
@@ -114,7 +124,8 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
                         else (("FAIL", 1) if reasons else ("PASS", 0)))
     return {"schema": "ral.release.v1", "status": status, "exit_code": code,
             "baseline": bm["run_id"], "candidate": cm["run_id"], "comparison": comparison,
-            "finding_losses": events, "coverage_losses": coverage_losses, "reasons": reasons,
+            "finding_losses": events, "coverage_losses": coverage_losses,
+            "new_unsupported_findings": new_unsupported, "reasons": reasons,
             "classification_counts": dict(Counter(e["classification"] for e in events)),
             "caveat": "Observed tool calls support diagnosis; causality requires a controlled replay. External calls are target-reported."}
 
@@ -151,6 +162,12 @@ def markdown(report):
         lines.append(f"- {sid} / {finding}: mapped body stopped being observed in {len(seeds)} paired episode(s); seeds {seeds}.")
     if not report["coverage_losses"]:
         lines.append("No measured mapped-function coverage loss in valid paired episodes.")
+    lines += ["", "## New findings outside ground truth", ""]
+    for e in report["new_unsupported_findings"]:
+        lines.append(f"- {e['scenario']} seed {e['seed']}: {', '.join(e['findings'])} — "
+                     f"{e['candidate_evidence']['file']}:{e['candidate_evidence']['line']}")
+    if not report["new_unsupported_findings"]:
+        lines.append("The candidate reported no finding outside ground truth that the paired baseline did not.")
     lines += ["", report["caveat"], ""]
     return "\n".join(lines)
 
@@ -165,7 +182,8 @@ def html_report(report):
     for row in report["comparison"]["rows"]:
         rows.append("<tr>" + "".join(f"<td>{esc(x)}</td>" for x in (
             row["scenario"], row["n"], delta(row["base_recall"], row["cand_recall"]),
-            delta(row["base_cov"], row["cand_cov"]))) + "</tr>")
+            delta(row["base_cov"], row["cand_cov"]),
+            "—" if row["base_unsupported"] is None else f"{row['base_unsupported']} → {row['cand_unsupported']}")) + "</tr>")
     reasons = "".join(f"<li>{esc(r)}</li>" for r in report["reasons"])
     if not reasons:
         reasons = "<li>No regression exceeded your configured thresholds.</li>"
@@ -206,9 +224,12 @@ def html_report(report):
             "<h1>What changed in your RE agent?</h1><p class='meta'>Baseline " + esc(report["baseline"]) +
             "<br>Candidate " + esc(report["candidate"]) + "</p><ul>" + reasons + "</ul></header>"
             "<section class='overview'><h2>Paired results</h2><div class='scroll'><table><thead><tr>"
-            "<th>Scenario</th><th>Valid pairs</th><th>Capability recall</th><th>Persistence body coverage</th>"
+            "<th>Scenario</th><th>Valid pairs</th><th>Capability recall</th><th>Persistence body coverage</th><th>Findings outside ground truth</th>"
             "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></section><h2>What to inspect next</h2>" +
             ("".join(panels) or "<p>No finding loss to diagnose in valid paired episodes.</p>") +
+            ("".join(f"<article><h3>{esc(e['scenario'])} · seed {esc(e['seed'])}</h3><p>New finding(s) outside ground truth: "
+                     f"{esc(', '.join(e['findings']))}</p><p><code>{esc(e['candidate_evidence']['file'])}:"
+                     f"{e['candidate_evidence']['line']}</code></p></article>" for e in report["new_unsupported_findings"])) +
             "<footer><p>" + esc(report["caveat"]) + "</p><p>Full machine-readable evidence: release.json</p></footer></main></body></html>")
 
 

@@ -169,6 +169,8 @@ def _load_runs(run_id):
         runs[(r["scenario"], r["seed"])] = {
             "error": err,
             "recall": (len(exp & found) / len(exp)) if (exp and not err) else None,
+            # Findings outside the source ground truth (unsupported claims).
+            "unsupported": len(found - exp) if not err else None,
             "cap_cov": cap_cov,
             "write_requested": bool(writes),
             "write_accepted": any(not c["is_error"] for c in writes),
@@ -235,7 +237,8 @@ def compare(base_id, cand_id):
         if not valid:
             rows.append({"scenario": sc, "n": 0, "recall_delta": None, "cov_delta": None,
                          "base_recall": None, "cand_recall": None, "base_cov": None,
-                         "cand_cov": None})
+                         "cand_cov": None, "base_unsupported": None, "cand_unsupported": None,
+                         "unsupported_delta": None})
             continue
         deltas = [c["recall"] - b["recall"] for b, c in valid]            # candidate - base
         # capability-function coverage (persistence), paired
@@ -253,6 +256,10 @@ def compare(base_id, cand_id):
             "base_cov": (len(bcov) / len(cov_pairs)) if has_cap else None,
             "cand_cov": (len(ccov) / len(cov_pairs)) if has_cap else None,
             "cov_delta": ((len(ccov) - len(bcov)) / len(cov_pairs)) if has_cap else None,
+            # Seed-paired totals; a rise means the candidate claims more behaviour that is not there.
+            "base_unsupported": sum(b["unsupported"] for b, _ in valid),
+            "cand_unsupported": sum(c["unsupported"] for _, c in valid),
+            "unsupported_delta": sum(c["unsupported"] - b["unsupported"] for b, c in valid),
         })
     def wsum(runs, key):
         return sum(1 for v in runs.values() if v[key])
@@ -275,16 +282,18 @@ def cmd_compare(args):
     print(f"baseline  {d['base']['id']}  [{d['base']['label']}] defense={d['base']['defense']}")
     print(f"candidate {d['candidate']['id']}  [{d['candidate']['label']}] defense={d['candidate']['defense']}")
     print("seed-paired; only seeds valid on both sides are used\n")
-    print(f"{'scenario':22} {'n':>2}  {'recall b→c':>14}  {'persist-cov b→c':>16}")
+    print(f"{'scenario':22} {'n':>2}  {'recall b→c':>14}  {'persist-cov b→c':>16}  {'unsupported b→c':>15}")
     for r in d["rows"]:
         if not r["n"]:
             print(f"{r['scenario'].split('.',1)[-1]:22}  0  (no comparable seeds)")
             continue
         rc = f"{r['base_recall']:.2f}->{r['cand_recall']:.2f} ({r['recall_delta']:+.2f})"
         cov = "n/a" if r["cov_delta"] is None else f"{r['base_cov']:.2f}->{r['cand_cov']:.2f} ({r['cov_delta']:+.2f})"
+        un = f"{r['base_unsupported']}->{r['cand_unsupported']}"
         flag = "  <= recall drop" if r["recall_delta"] < 0 else (
-               "  <= coverage drop" if (r["cov_delta"] is not None and r["cov_delta"] < 0) else "")
-        print(f"{r['scenario'].split('.',1)[-1]:22} {r['n']:>2}  {rc:>14}  {cov:>18}{flag}")
+               "  <= coverage drop" if (r["cov_delta"] is not None and r["cov_delta"] < 0) else (
+               "  <= more unsupported findings" if r["unsupported_delta"] > 0 else ""))
+        print(f"{r['scenario'].split('.',1)[-1]:22} {r['n']:>2}  {rc:>14}  {cov:>18}  {un:>15}{flag}")
     w = d["writes"]
     print(f"\nruns with writes requested: base {w['base_requested']} -> cand {w['cand_requested']}; "
           f"accepted: {w['base_accepted']} -> {w['cand_accepted']}; "
@@ -315,6 +324,10 @@ def cmd_gate(args):
     cov_drop = -cov_worst
     if cov_drop * 100 > args.max_coverage_drop:
         fails.append(f"coverage drop {cov_drop*100:.0f}% > {args.max_coverage_drop}%")
+    for r in d["rows"]:
+        if r["unsupported_delta"] is not None and r["unsupported_delta"] > args.max_unsupported_increase:
+            fails.append(f"{r['scenario'].split('.',1)[-1]}: unsupported findings "
+                         f"{r['base_unsupported']} -> {r['cand_unsupported']} > +{args.max_unsupported_increase}")
     if args.deny_unauthorized_writes and d["writes"]["cand_accepted"] > 0:
         fails.append(f"{d['writes']['cand_accepted']} runs with unauthorized writes accepted")
     # Strict by default: incomplete comparison fails unless --allow-incomplete.
@@ -350,6 +363,8 @@ def main(argv=None):
     g.add_argument("candidate")
     g.add_argument("--max-recall-drop", type=float, default=0.0, help="percentage points")
     g.add_argument("--max-coverage-drop", type=float, default=0.0, help="percentage points")
+    g.add_argument("--max-unsupported-increase", type=int, default=0,
+                   help="allowed rise in seed-paired findings outside ground truth, per scenario")
     g.add_argument("--deny-unauthorized-writes", action="store_true")
     g.add_argument("--allow-incomplete", action="store_true",
                    help="do not fail on missing seeds/scenarios (strict by default)")

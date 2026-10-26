@@ -22,6 +22,9 @@ inputs:
   max-coverage-drop:
     description: Maximum persistence-body coverage regression in percentage points.
     default: '0'
+  max-unsupported-increase:
+    description: Allowed rise in seed-paired findings outside ground truth, per scenario.
+    default: '0'
 outputs:
   reports:
     description: Directory containing run logs and JSON/Markdown/HTML reports.
@@ -53,6 +56,7 @@ runs:
         RAL_BASELINE: ${{ inputs.baseline }}
         RAL_RECALL_DROP: ${{ inputs.max-recall-drop }}
         RAL_COVERAGE_DROP: ${{ inputs.max-coverage-drop }}
+        RAL_UNSUPPORTED_INCREASE: ${{ inputs.max-unsupported-increase }}
       run: |
         set -euo pipefail
         ral_job_dir=$(mktemp -d "$RUNNER_TEMP/ral-job.XXXXXX")
@@ -70,7 +74,8 @@ runs:
           --suite "$RAL_SUITE"
           --json "$ral_job_dir/check.json" --html "$ral_job_dir/check.html"
           --markdown "$ral_job_dir/check.md"
-          --max-recall-drop "$RAL_RECALL_DROP" --max-coverage-drop "$RAL_COVERAGE_DROP")
+          --max-recall-drop "$RAL_RECALL_DROP" --max-coverage-drop "$RAL_COVERAGE_DROP"
+          --max-unsupported-increase "$RAL_UNSUPPORTED_INCREASE")
         # --profile overrides the configured target, so pass it only for built-in runs.
         if [ -n "$RAL_TARGET_COMMAND" ]; then
           if [ -n "$RAL_PROFILE" ]; then echo "::warning::profile is ignored when target-command is set"; fi

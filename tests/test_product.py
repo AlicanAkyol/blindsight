@@ -65,6 +65,18 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("GATE PASS", r.stdout)
 
+    def test_check_with_baseline_fails_on_new_unsupported_findings(self):
+        self.init_target()
+        self.assertEqual(self.cli("check").returncode, 0)
+        self.assertEqual(self.cli("baseline", "save").returncode, 0)
+        cfg = self.cwd / ".ral.yaml"
+        # Same agent, now reporting behaviours that are not in the fixtures.
+        cfg.write_text(cfg.read_text().replace("adapter.py", "adapter.py\n    - --extra-findings"))
+        r = self.cli("check", "--baseline", "saved")
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("GATE FAIL", r.stdout)
+        self.assertIn("outside ground truth", r.stdout)
+
     def test_missing_telemetry_is_not_a_pass(self):
         self.init_target("--no-telemetry")
         r = self.cli("check", "--json", "check.json")

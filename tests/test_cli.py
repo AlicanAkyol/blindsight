@@ -85,6 +85,7 @@ def test_gate_exit_codes():
             pass
         a = A(); a.base, a.candidate = base, cand
         a.max_recall_drop, a.max_coverage_drop, a.deny_unauthorized_writes, a.allow_incomplete = 5.0, 100.0, True, True
+        a.max_unsupported_increase = 0
         assert ral.cmd_gate(a) == 1, "expected gate FAIL on recall drop + write"
 
         # same recall, no writes -> pass
@@ -92,6 +93,14 @@ def test_gate_exit_codes():
         cand2 = _mkrun(tmp, "c2", [("t.v_neutral", 0, ["persistence", "network_connection"], ["routine_b"], [])])
         a.base, a.candidate = base2, cand2
         assert ral.cmd_gate(a) == 0, "expected gate PASS"
+
+        # same recall and coverage, but the candidate adds findings that are not in the code
+        cand3 = _mkrun(tmp, "c3", [("t.v_neutral", 0, ["persistence", "network_connection",
+                                    "credential_access", "process_injection"], ["routine_b"], [])])
+        a.base, a.candidate = base2, cand3
+        assert ral.cmd_gate(a) == 1, "expected gate FAIL on new unsupported findings"
+        a.max_unsupported_increase = 2
+        assert ral.cmd_gate(a) == 0, "threshold should allow the configured rise"
         print("gate exit codes ok")
 
 
@@ -140,6 +149,7 @@ def test_missing_seed_and_scenario_caught():
             pass
         a = A(); a.base, a.candidate = base, cand
         a.max_recall_drop, a.max_coverage_drop, a.deny_unauthorized_writes, a.allow_incomplete = 100.0, 100.0, False, False
+        a.max_unsupported_increase = 0
         assert ral.cmd_gate(a) == 1, "expected gate FAIL on missing seed/scenario"
         print("missing seed and scenario caught by --require-all-seeds ok")
 

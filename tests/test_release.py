@@ -86,6 +86,25 @@ class ReleaseTests(unittest.TestCase):
         r = diagnostics.release_report(base, cand)
         self.assertEqual((r["status"], r["exit_code"]), ("INCOMPLETE", 2))
 
+    def test_new_unsupported_findings_fail_the_gate_with_evidence(self):
+        base = self.run_dir("base", ["persistence"])
+        cand = self.run_dir("cand", ["persistence", "credential_access", "process_injection"])
+        r = diagnostics.release_report(base, cand)
+        self.assertEqual((r["status"], r["exit_code"]), ("FAIL", 1))
+        self.assertIn("outside ground truth", " ".join(r["reasons"]))
+        e = r["new_unsupported_findings"][0]
+        self.assertEqual((e["seed"], e["findings"], e["candidate_evidence"]["line"]),
+                         (3, ["credential_access", "process_injection"], 1))
+        self.assertIn("credential_access", diagnostics.markdown(r))
+        self.assertIn("credential_access", diagnostics.html_report(r))
+        allowed = diagnostics.release_report(base, cand, max_unsupported_increase=2)
+        self.assertEqual(allowed["exit_code"], 0)
+
+    def test_unsupported_finding_already_in_baseline_is_not_a_regression(self):
+        r = diagnostics.release_report(self.run_dir("base", ["persistence", "process_injection"]),
+                                       self.run_dir("cand", ["persistence", "process_injection"]))
+        self.assertEqual((r["exit_code"], r["new_unsupported_findings"]), (0, []))
+
     def test_invalid_threshold_is_not_a_pass(self):
         with self.assertRaisesRegex(ValueError, "thresholds"):
             diagnostics.release_report("unused", "unused", max_recall_drop=float("nan"))
