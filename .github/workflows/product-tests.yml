@@ -28,6 +28,8 @@ jobs:
         run: |
           /tmp/ral-test/bin/python tests/test_stats.py
           /tmp/ral-test/bin/python tests/test_cli.py
+      - name: Published numbers reproduce from evidence logs
+        run: /tmp/ral-test/bin/python evidence/recompute.py
   action-external-target:
     # Runs the composite Action itself: an external target must be checked as that target,
     # never routed to the built-in Ghidra/Ollama profile.

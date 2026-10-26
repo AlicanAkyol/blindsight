@@ -34,7 +34,9 @@ selects functions by imported-API xrefs instead of names closes the gap
 These are pilot numbers: one model, one toolchain, two small hand-written
 fixtures, and a defense designed after seeing them (in-sample). Hypotheses,
 including the null and non-significant results, are pre-registered in
-[docs/PREREG.md](docs/PREREG.md).
+[docs/PREREG.md](docs/PREREG.md). The raw run logs are in
+[evidence/](evidence/); `uv run python evidence/recompute.py` recomputes every
+number above from them.
 
 ## Quick start
 

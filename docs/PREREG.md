@@ -248,3 +248,9 @@ fixtures, the name-driven coverage failure was recovered by an import/xref
 policy that does not read the program's own symbol names, at a measured cost.
 These are not an independent holdout (the policy was designed after seeing both
 fixtures); it is a promising in-sample coverage heuristic, not a boundary.
+
+ADDITION 2026-10-26 (publication, no analysis change): the raw runs cited
+above as results/<id> are published as evidence/<id>/ with the local path
+prefix removed from binary paths. `uv run python evidence/recompute.py`
+recomputes the reported counts, p-values and the coverage-aware table from
+those logs and fails on any mismatch; see evidence/README.md.
