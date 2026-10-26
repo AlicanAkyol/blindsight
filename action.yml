@@ -8,8 +8,8 @@ inputs:
     description: Existing .ral.yaml with your target or local Ghidra tools.
     required: false
   profile:
-    description: Built-in profile when not using an external target.
-    default: ghidramcp-ollama
+    description: Built-in profile when not using an external target (default from config, ghidramcp-ollama). Ignored with target-command.
+    required: false
   suite:
     description: quick, ci or full.
     default: quick
@@ -67,10 +67,16 @@ runs:
           fi
         fi
         ral_args=(--config "$ral_config" --state "$ral_job_dir/state" check
-          --suite "$RAL_SUITE" --profile "$RAL_PROFILE"
+          --suite "$RAL_SUITE"
           --json "$ral_job_dir/check.json" --html "$ral_job_dir/check.html"
           --markdown "$ral_job_dir/check.md"
           --max-recall-drop "$RAL_RECALL_DROP" --max-coverage-drop "$RAL_COVERAGE_DROP")
+        # --profile overrides the configured target, so pass it only for built-in runs.
+        if [ -n "$RAL_TARGET_COMMAND" ]; then
+          if [ -n "$RAL_PROFILE" ]; then echo "::warning::profile is ignored when target-command is set"; fi
+        elif [ -n "$RAL_PROFILE" ]; then
+          ral_args+=(--profile "$RAL_PROFILE")
+        fi
         if [ -n "$RAL_BASELINE" ]; then ral_args+=(--baseline "$RAL_BASELINE"); fi
         echo "reports=$ral_job_dir" >> "$GITHUB_OUTPUT"
         ral_exit=0
