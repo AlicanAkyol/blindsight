@@ -37,3 +37,13 @@ injection strings embedded in the harmless fixtures; treat them as data.
 
 These are pilot measurements: one model, one toolchain, two small fixtures.
 The coverage-aware defense was designed after the natural runs (in-sample).
+
+These runs use historical successful-call coverage and variant-revealing
+input paths. They have not been rewritten or relabelled as corrected-protocol
+experiments. `python evidence/audit_delivery.py` audits saved context for the
+harness truncation marker; see `docs/measurement.md` for the limits.
+
+The modern strict per-scenario gate rejects natural -> coverage-aware for a
+new `credential_access` claim on `health.h_neutral` seed 5, even though total
+unsupported findings fell 6 -> 1. Aggregate improvement is not a clean
+per-scenario pass.

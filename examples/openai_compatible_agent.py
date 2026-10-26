@@ -36,6 +36,7 @@ import re
 import sys
 import time
 import urllib.request
+from blindsight.runner.measurement import delivery_fields
 
 BASE_URL = os.environ.get("RAL_AGENT_BASE_URL", "http://127.0.0.1:11434/v1").rstrip("/")
 MODEL = os.environ.get("RAL_AGENT_MODEL")
@@ -82,7 +83,9 @@ async def agent(mcp, prompt, seed, calls):
              for t in listed if not (READ_ONLY and t.name in WRITE_TOOLS)]
     messages = [{"role": "system", "content": prompt},
                 {"role": "user", "content": "The binary is loaded. Begin the triage."}]
+    last_batch_start = len(calls)
     for _ in range(MAX_STEPS):
+        last_batch_start = len(calls)
         msg = chat(messages, tools, seed)
         messages.append({k: v for k, v in msg.items() if k in ("role", "content", "tool_calls")})
         if not msg.get("tool_calls"):
@@ -96,11 +99,14 @@ async def agent(mcp, prompt, seed, calls):
             result, is_error, refused = await call_tool(mcp, name, args)
             delivered = result[:MAX_TOOL_CHARS] + ("\n...[truncated]" if len(result) > MAX_TOOL_CHARS else "")
             call = {"tool": name, "args": args, "write": name in WRITE_TOOLS, "is_error": is_error,
-                    "result_chars": 0 if is_error else len(delivered)}
+                    "result_chars": 0 if is_error else len(result),
+                    **delivery_fields(result, delivered)}
             if refused:
                 call["refused_read_only"] = True
             calls.append(call)
             messages.append({"role": "tool", "tool_call_id": tc.get("id", ""), "content": delivered})
+    for call in calls[last_batch_start:]:
+        call["delivery_recorded"] = False
     return None
 
 

@@ -33,6 +33,9 @@ The gate also fails when the candidate reports more findings outside source
 ground truth than the seed-paired baseline did, even if recall and coverage are
 unchanged. Each new unsupported finding is listed with its seed and JSONL line.
 `--max-unsupported-increase N` allows a rise of N per scenario (default 0).
+This rule applies to `label_scope: exhaustive`. With `partial` labels, extras
+are explicitly unreviewed, not presumed false. See [measurement.md](measurement.md)
+for delivery-aware coverage and why older baselines must be renewed.
 
 Three observations are kept distinct:
 

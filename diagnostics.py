@@ -6,6 +6,7 @@ import re
 import shlex
 from collections import Counter, defaultdict
 from pathlib import Path
+from .runner.measurement import body_hits, label_scope
 
 
 def read_run(directory):
@@ -30,9 +31,7 @@ def body_evidence(record, function):
     calls = record.get("calls")
     if calls is None:
         return None
-    hits = [i for i, c in enumerate(calls, 1) if c.get("tool") == "decompile_function"
-            and c.get("args", {}).get("name") == function and not c.get("is_error", True)
-            and c.get("result_chars", 0) > 0]
+    hits = body_hits(record, function)
     return {"successful_call_indices": hits, "body_observed": bool(hits), "function": function}
 
 
@@ -46,7 +45,7 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
     comparison = ral.compare(str(base_dir), str(candidate_dir))
     bm, bs, br = read_run(base_dir)
     cm, cs, cr = read_run(candidate_dir)
-    events, coverage_losses, new_unsupported = [], [], []
+    events, coverage_losses, new_unsupported, unreviewed = [], [], [], []
     for key in sorted(set(br) & set(cr)):
         sid, seed = key
         if sid not in bs or sid not in cs or sid in comparison["incompatible"]:
@@ -57,7 +56,8 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
         expected = set(bs[sid]["expected_findings"])
         added = sorted(set(c["report"]["findings"]) - expected - set(b["report"]["findings"]))
         if added:
-            new_unsupported.append({"scenario": sid, "seed": seed, "findings": added,
+            destination = new_unsupported if label_scope(bs[sid]) == "exhaustive" else unreviewed
+            destination.append({"scenario": sid, "seed": seed, "findings": added,
                                     "baseline_evidence": {"file": br[key]["file"], "line": br[key]["line"]},
                                     "candidate_evidence": {"file": cr[key]["file"], "line": cr[key]["line"]}})
         before = set(b["report"]["findings"]) & expected
@@ -126,8 +126,9 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
             "baseline": bm["run_id"], "candidate": cm["run_id"], "comparison": comparison,
             "finding_losses": events, "coverage_losses": coverage_losses,
             "new_unsupported_findings": new_unsupported, "reasons": reasons,
+            "unreviewed_findings": unreviewed,
             "classification_counts": dict(Counter(e["classification"] for e in events)),
-            "caveat": "Observed tool calls support diagnosis; causality requires a controlled replay. External calls are target-reported."}
+            "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported."}
 
 
 def markdown(report):
@@ -167,7 +168,10 @@ def markdown(report):
         lines.append(f"- {e['scenario']} seed {e['seed']}: {', '.join(e['findings'])} — "
                      f"{e['candidate_evidence']['file']}:{e['candidate_evidence']['line']}")
     if not report["new_unsupported_findings"]:
-        lines.append("The candidate reported no finding outside ground truth that the paired baseline did not.")
+        lines.append("No new unsupported findings on exhaustively labelled scenarios.")
+    lines += ["", "## Additional findings requiring review (partial labels)", ""]
+    for e in report.get("unreviewed_findings", []):
+        lines.append(f"- {e['scenario']} seed {e['seed']}: {', '.join(e['findings'])}; not classified as false.")
     lines += ["", report["caveat"], ""]
     return "\n".join(lines)
 
@@ -230,6 +234,9 @@ def html_report(report):
             ("".join(f"<article><h3>{esc(e['scenario'])} · seed {esc(e['seed'])}</h3><p>New finding(s) outside ground truth: "
                      f"{esc(', '.join(e['findings']))}</p><p><code>{esc(e['candidate_evidence']['file'])}:"
                      f"{e['candidate_evidence']['line']}</code></p></article>" for e in report["new_unsupported_findings"])) +
+            ("".join(f"<article><h3>Partial labels: review required</h3><p>{esc(e['scenario'])}, seed {esc(e['seed'])}: "
+                     f"{esc(', '.join(e['findings']))}. Not classified as false.</p></article>"
+                     for e in report.get("unreviewed_findings", []))) +
             "<footer><p>" + esc(report["caveat"]) + "</p><p>Full machine-readable evidence: release.json</p></footer></main></body></html>")
 
 

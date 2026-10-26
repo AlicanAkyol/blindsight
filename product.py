@@ -180,7 +180,9 @@ def _external_run(cfg, target_name, chosen, repeats, state, suite, capsule=None,
             "corpus_manifest": capsule["corpus_manifest"] if capsule else verify_artifacts(state), "ghidra": "external target",
             "ghidra_mcp_version": "external target", "ghidra_mcp_commit": "external target",
             "agents": {target_name: {"external": True}}, "arm": "external", "defense": "target-owned"}
+    meta.update(measurement_protocol="adapter:no-calls", input_paths="opaque-v1")
     (out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
+    delivery_modes = set()
     with (out / "runs.jsonl").open("w") as log:
         for sc in chosen:
             for seed in seeds:
@@ -188,7 +190,11 @@ def _external_run(cfg, target_name, chosen, repeats, state, suite, capsule=None,
                 root = Path(artifact_root or state)
                 r = run_one(target, sc, root / "build" / sc["variant"] / sc["sample"], seed, prompt=prompts[sc["task"]])
                 r["agent"] = target_name
+                for call in r.get("calls", []):
+                    delivery_modes.add("complete-output-v2" if "delivery_recorded" in call else "call-proxy-v1")
                 log.write(json.dumps(r) + "\n"); log.flush()
+    meta["measurement_protocol"] = "adapter:" + ",".join(sorted(delivery_modes or {"no-calls"}))
+    (out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     return out
 
 

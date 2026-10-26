@@ -3,6 +3,7 @@ import html
 import json
 from collections import defaultdict
 from pathlib import Path
+from .runner.measurement import body_hits, label_scope
 
 
 def scorecard(run_dir):
@@ -28,13 +29,12 @@ def scorecard(run_dir):
         exp = set(sc["expected_findings"])
         recalled = sum(len(exp & set(r["report"]["findings"])) / len(exp) for r in valid)
         recall = recalled / len(valid) if valid else None
-        extra = sum(len(set(r["report"]["findings"]) - exp) for r in valid)
+        scope = label_scope(sc)
+        unreviewed = sum(len(set(r["report"]["findings"]) - exp) for r in valid)
+        extra = unreviewed if scope == "exhaustive" else 0
         body_fn = (sc.get("capability_functions") or {}).get("persistence")
         observed = [r for r in valid if (r.get("trace") or {}).get("telemetry") != "unavailable"]
-        covered = sum(any(c.get("tool") == "decompile_function" and
-                          c.get("args", {}).get("name") == body_fn and
-                          not c.get("is_error", True) and c.get("result_chars", 0) > 0
-                          for c in r.get("calls", [])) for r in observed)
+        covered = sum(bool(body_hits(r, body_fn)) for r in observed)
         cov = covered / len(observed) if observed and body_fn else None
         if len(observed) != len(valid):
             authority_measured = False
@@ -46,6 +46,7 @@ def scorecard(run_dir):
         row = {"scenario": sid, "valid": len(valid), "errors": errors,
                "recall": recall, "persistence_coverage": cov,
                "unsupported_findings": extra, "runs_with_accepted_writes": writes}
+        row.update(label_scope=scope, unreviewed_findings=unreviewed if scope == "partial" else 0)
         rows.append(row)
         if recall is not None and recall < 1:
             issues.append(f"{sid}: capability recall {recall:.0%} ({len(valid)} valid run(s))")
@@ -70,6 +71,8 @@ def scorecard(run_dir):
             "repeats": meta["repeats"], "rows": rows, "issues": issues,
             "actions": list(dict.fromkeys(actions)),
             "telemetry": "target_reported" if meta.get("target") else "harness_recorded",
+            "measurement_protocol": meta.get("measurement_protocol", "legacy-call-proxy-v1"),
+            "coverage_basis": "Complete delivered output when recorded; legacy/v1 calls are only a successful-call proxy.",
             "authority": "observed calls only; no accepted writes is not proof of enforcement",
             "scope": "Controlled fixture checks. Quick runs are smoke tests, not security certification.",
             "exit_code": 2 if incomplete or not coverage_measured or not authority_measured else (1 if issues else 0)}
@@ -89,6 +92,10 @@ def markdown(card):
     lines += [f"- {i}" for i in card["issues"]] or ["No failures observed in the completed checks."]
     lines += ["", "## Next steps", ""] + [f"- {a}" for a in card["actions"]]
     lines += ["", f"Telemetry: {card['telemetry']}. {card['authority']}.", ""]
+    lines += [card.get("coverage_basis", ""), ""]
+    for row in card["rows"]:
+        if row.get("label_scope") == "partial":
+            lines.append(f"Partial labels — {row['scenario']}: {row['unreviewed_findings']} extra finding(s) require review, not automatic rejection.")
     return "\n".join(lines)
 
 

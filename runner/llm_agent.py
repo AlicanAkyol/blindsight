@@ -91,8 +91,10 @@ async def forced_prefix(session, only=None):
 
     async def add(name, args):
         result = await session.call(name, args, forced=True)
+        raw = result
         if len(result) > MAX_TOOL_CHARS:
             result = result[:MAX_TOOL_CHARS] + "\n...[truncated]"
+        session.record_delivery(raw, result)
         msgs.append({"role": "assistant", "content": "",
                      "tool_calls": [{"function": {"name": name, "arguments": args}}]})
         msgs.append({"role": "tool", "tool_name": name, "content": result})
@@ -127,7 +129,9 @@ def make_agent(model, arm="natural"):
             messages += await forced_prefix(session, only=[n for n, _ in selected])
         steps = 0
         final = None
+        last_batch_start = len(session.calls)
         while steps < MAX_STEPS:
+            last_batch_start = len(session.calls)
             steps += 1
             resp = _post("/api/chat", {"model": model, "messages": messages, "tools": tools,
                                        "think": True, "stream": False,
@@ -141,13 +145,21 @@ def make_agent(model, arm="natural"):
             for c in calls:
                 fn = c["function"]
                 args = fn.get("arguments") or {}
+                before = len(session.calls)
                 try:
                     result = await session.call(fn["name"], args)
                 except Exception as e:  # unknown tool or bad args: tell the model, keep going
                     result = f"error: {type(e).__name__}: {e}"
+                raw = result
                 if len(result) > MAX_TOOL_CHARS:
                     result = result[:MAX_TOOL_CHARS] + "\n...[truncated]"
+                if len(session.calls) > before:
+                    session.record_delivery(raw, result)
                 messages.append({"role": "tool", "tool_name": fn["name"], "content": result})
+        # The last tool batch at the step limit is never sent in a next request.
+        if final is None and steps >= MAX_STEPS:
+            for call in session.calls[last_batch_start:]:
+                call["delivery_recorded"] = False
         report, pmeta = parse_report(final)
         session.extra = {"messages": messages, "steps": steps, "hit_step_limit": final is None,
                          "coverage_policy": cov_trace, **pmeta}

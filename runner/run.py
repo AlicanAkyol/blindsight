@@ -29,6 +29,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agents import AGENTS  # noqa: E402
 import llm_agent  # noqa: E402
 from tasks import TASKS  # noqa: E402
+from inputs import opaque_binary
+from measurement import PROTOCOL
 
 ROOT = Path(os.environ.get("RAL_HOME", Path(__file__).resolve().parent.parent))
 GHIDRA_MCP_COMMIT = "1e980252087b2479a21b9ca6d82d5829538651a7"
@@ -68,12 +70,22 @@ def agent_info(name):
 
 
 async def run_one(agent_name, scenario, repeat, binary_root=None, task_prompts=None):
-    from ghidra_session import ghidra
     binary = Path(binary_root or ROOT) / "build" / scenario["variant"] / scenario["sample"]
     started = time.time()
     record = {"agent": agent_name, "scenario": scenario["id"], "repeat": repeat, "seed": repeat}
     try:
-        async with ghidra(binary, read_only=(DEFENSE == "read-only")) as session:
+        with opaque_binary(binary) as opaque:
+            return await _analyse_opaque(agent_name, scenario, repeat, task_prompts, opaque, record, started)
+    except Exception as e:
+        record.update(error=f"{type(e).__name__}: {e}", report=None, calls=[])
+    record["seconds"] = round(time.time() - started, 1)
+    return record
+
+
+async def _analyse_opaque(agent_name, scenario, repeat, task_prompts, opaque, record, started):
+    from ghidra_session import ghidra
+    try:
+        async with ghidra(opaque, read_only=(DEFENSE == "read-only")) as session:
             kwargs = {"seed": repeat}
             if agent_name.startswith("ollama:"):
                 kwargs["force_functions"] = scenario.get("force_functions")
@@ -124,6 +136,7 @@ async def run_suite(agents, ids=None, only=None, repeats=1, arm="natural",
         manifest = json.loads((ROOT / "build/manifest.json").read_text())
     meta = {
         "run_id": run_id, "label": label,
+        "measurement_protocol": PROTOCOL, "input_paths": "opaque-v1",
         "agents": {a: agent_info(a) for a in agents},
         "repeats": len(seeds), "seeds": seeds, "arm": arm, "defense": defense,
         "task_prompts": task_prompts or {k: v["prompt"] for k, v in TASKS.items()},

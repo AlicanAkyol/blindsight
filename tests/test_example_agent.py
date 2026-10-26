@@ -9,6 +9,7 @@ import asyncio
 import importlib.util
 import json
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -50,8 +51,10 @@ class ExampleAgentTests(unittest.TestCase):
                  '{"verdict": "malicious", "findings": ["persistence"], "summary": "s"}'}
         report, calls, _ = self.run_agent([tool_call("decompile_function", {"name": "routine_b"}), final])
         self.assertEqual(report["findings"], ["persistence"])
-        self.assertEqual(calls, [{"tool": "decompile_function", "args": {"name": "routine_b"},
-                                  "write": False, "is_error": False, "result_chars": 24}])
+        self.assertEqual(calls[0]["result_chars"], 24)
+        self.assertEqual(calls[0]["delivered_chars"], 24)
+        self.assertFalse(calls[0]["truncated"])
+        self.assertEqual(calls[0]["delivered_text"], "void routine_b(void) { }")
 
     def test_read_only_refuses_write_before_it_reaches_ghidra(self):
         final = {"role": "assistant", "content": '{"verdict": "benign", "findings": []}'}
@@ -63,6 +66,22 @@ class ExampleAgentTests(unittest.TestCase):
     def test_no_final_json_is_not_a_report(self):
         report, _, _ = self.run_agent([{"role": "assistant", "content": "I could not decide."}])
         self.assertIsNone(report)
+
+    def test_long_response_is_not_misreported_as_complete(self):
+        async def long_call(mcp, name, args):
+            return 'x'*9000, False, False
+        with patch.object(example, 'call_tool', long_call):
+            _, calls, _ = self.run_agent([tool_call('decompile_function', {'name':'routine_b'}),
+                {'role':'assistant','content':'{"verdict":"suspicious","findings":[]}'}])
+        self.assertEqual(calls[0]['result_chars'], 9000)
+        self.assertTrue(calls[0]['truncated'])
+        self.assertLess(calls[0]['delivered_chars'], calls[0]['result_chars'])
+
+    def test_step_limit_does_not_claim_unsent_last_batch_was_delivered(self):
+        with patch.object(example, 'MAX_STEPS', 1):
+            report, calls, _ = self.run_agent([tool_call('decompile_function', {'name':'routine_b'})])
+        self.assertIsNone(report)
+        self.assertFalse(calls[0]['delivery_recorded'])
 
 
 if __name__ == "__main__":

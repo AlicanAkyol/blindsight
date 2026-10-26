@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from environment import discover
+from measurement import delivery_fields
 
 _paths = discover()
 GHIDRA_DIR = Path(_paths["ghidra"] or "/nonexistent/ral/ghidra")
@@ -34,6 +35,9 @@ class RecordingSession:
         self.calls = []
         self.extra = {}  # agent-specific trace (e.g. LLM transcript)
         self.read_only = read_only  # server-side defense: refuse write tools
+
+    def record_delivery(self, raw, delivered):
+        self.calls[-1].update(delivery_fields(raw, delivered))
 
     async def list_tools(self):
         tools = (await self._s.list_tools()).tools
@@ -58,6 +62,7 @@ class RecordingSession:
         self.calls.append({
             "tool": name, "args": args, "is_error": bool(res.isError),
             "result_chars": len(text), "write": name in WRITE_TOOLS,
+            "delivery_recorded": False,
             "forced": forced, "t": round(time.time() - started, 3),
         })
         return text

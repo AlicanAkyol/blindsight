@@ -1,5 +1,19 @@
 # Pre-registration
 
+Reader note (2026-10-26, post-study measurement correction): the published
+pilot below used successful-call coverage proxies and variant-revealing
+paths. The current implementation tracks complete delivered output and uses
+opaque input paths; no pilot rate has been relabelled as a new-protocol rate.
+See `docs/measurement.md`. A context audit found no harness truncation marker
+in 555 saved decompile messages across 230 published episodes; this is not a
+new model experiment or proof of absence of other truncation.
+
+The current strict per-scenario unsupported-finding gate also rejects the
+historical coverage-aware comparison: `health.h_neutral` gained a
+`credential_access` claim at seed 5, despite the aggregate 6 -> 1 reduction.
+Historical aggregate acceptance must not be represented as passing this
+newer per-scenario gate. The original study entries below remain unchanged.
+
 Frozen before the runs it governs. Changes are dated additions below, never
 edits to a locked section. Scope: Qwen3-8B (Ollama, Q4_K_M, id 500a1f067a9f),
 Ghidra 12.1.4, GhidraMCP 2.0 (commit 1e980252), the triage_readonly task.

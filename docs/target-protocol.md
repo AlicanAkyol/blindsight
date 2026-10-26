@@ -31,9 +31,10 @@ One JSON request arrives on stdin:
 }
 ```
 
-No expected answer, ground truth or scenario ID is supplied. The binary path
-currently contains the variant name (a limitation of the pilot); your adapter
-must forward the binary to the agent without using the filename as evidence.
+No expected answer, ground truth or scenario ID is supplied. Current runs
+send an opaque temporary `ral-input-<random>/sample.bin` path with identical
+bytes; it is removed after each episode. Older evidence used variant names
+in paths. This blinds path labels; it is not filesystem isolation.
 
 The adapter emits exactly one JSON response on stdout and diagnostics on stderr:
 
@@ -64,7 +65,10 @@ Valid verdicts: `malicious`, `suspicious`, `benign`. Findings are drawn from
 `calls` is optional but must be truthful when present. Omitting it leaves
 coverage and authority unmeasured; the scorecard returns exit 2. Supplying an
 empty list means no tools were invoked. A successful decompile needs positive
-`result_chars`; only results actually delivered to the agent belong here.
+`result_chars` for the legacy successful-call proxy. Upgraded adapters should
+also supply delivery fields from [measurement.md](measurement.md): only a
+successful, positive-length, untruncated delivered output counts as complete
+output coverage. Only results actually added to model context belong here.
 Writes require `write: true`; refused writes use `is_error: true` and can
 include `refused_read_only: true`.
 

@@ -38,6 +38,11 @@ including the null and non-significant results, are pre-registered in
 [evidence/](evidence/); `uv run python evidence/recompute.py` recomputes every
 number above from them.
 
+Published runs predate opaque input paths and complete-output delivery tracking.
+Their coverage numbers are historical successful-call proxies, not measurements
+from the corrected protocol. No old result is relabelled as a fresh experiment.
+See [measurement changes](docs/measurement.md).
+
 ## Quick start
 
 From a clone (not yet on PyPI):
@@ -59,8 +64,9 @@ missing paths go in `.ral.yaml`. Prepared ELF fixtures are included and
 hash-checked, so a standard check does not require a Docker rebuild.
 
 Already drive GhidraMCP with a local LLM? [examples/openai_compatible_agent.py](examples/openai_compatible_agent.py)
-is a working adapter for any OpenAI-compatible server with tool calling
-(Ollama, LM Studio, llama.cpp, vLLM). Put the model name and Ghidra paths in
+implements an adapter for OpenAI-compatible servers with tool calling.
+The exercised model/server combination is **Qwen3:8b + Ollama**; LM Studio,
+llama.cpp and vLLM have not been independently verified. Put the model name and Ghidra paths in
 the target's `env` in `.ral.yaml`, then `ral check`. It reports every
 GhidraMCP call it makes, so coverage is measured. To check your own agent,
 copy it and replace the agent loop.
@@ -84,8 +90,12 @@ Markdown and HTML in `.ral/results/<id>/`. A quick pass is a smoke-test result,
 not a security certificate. External telemetry is labelled as target-reported;
 missing telemetry does not silently pass coverage/authority checks.
 
-Status: beta. The package is `blindsight`; its command is `ral`.
+Status: v0.4.0 beta. The package is `blindsight`; its command is `ral`.
 Independent clean-machine testing is pending.
+
+**[Technical walkthrough](docs/demo.md)** ·
+**[Measurement definitions and compatibility](docs/measurement.md)** ·
+**[Project brief](docs/project-brief.md)**
 
 ## What it measures
 

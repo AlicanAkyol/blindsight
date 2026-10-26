@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 from tasks import FINDINGS, TASKS, VERDICTS
+from inputs import opaque_binary
 
 PROTOCOL = "ral.target.v1"
 MAX_OUTPUT = 2 * 1024 * 1024
@@ -36,6 +37,12 @@ def validate_response(obj):
                 raise ValueError("each call needs boolean write and is_error fields")
             if not isinstance(c.get("result_chars"), int) or c["result_chars"] < 0:
                 raise ValueError("each call needs non-negative result_chars")
+            if "delivery_recorded" in c:
+                if type(c["delivery_recorded"]) is not bool:
+                    raise ValueError("delivery_recorded must be boolean")
+                if c["delivery_recorded"] and (type(c.get("delivered_chars")) is not int
+                        or c["delivered_chars"] < 0 or type(c.get("truncated")) is not bool):
+                    raise ValueError("delivery evidence needs delivered_chars and truncated")
     return obj
 
 
@@ -51,7 +58,8 @@ def run_one(target, scenario, binary, seed, prompt=None):
         if not isinstance(command, list) or not command or any(not isinstance(x, str) for x in command):
             raise ValueError("target.command must be a non-empty argv list")
         env = dict(os.environ, **target.get("env", {}))
-        with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+        with opaque_binary(binary) as opaque, tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+            request["binary"] = str(opaque)
             proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=out, stderr=err,
                                     cwd=target.get("cwd"), env=env, start_new_session=True)
             try:

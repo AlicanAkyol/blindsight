@@ -28,6 +28,7 @@ ROOT = Path(os.environ.get("RAL_HOME", CODE_ROOT))
 sys.path.insert(0, str(CODE_ROOT / "runner"))
 sys.path.insert(0, str(CODE_ROOT / "evaluator"))
 sys.path.insert(0, str(CODE_ROOT / "corpus"))
+from measurement import body_hits, label_scope
 
 
 def load_config():
@@ -157,12 +158,9 @@ def _load_runs(run_id):
         # Coverage = did the capability function's body actually reach the
         # model's context, by anyone (the agent's own call or a defense policy
         # that force-decompiled it). A failed decompile does NOT count.
-        decompiled = {c["args"].get("name") for c in r.get("calls", [])
-                      if c["tool"] in DECOMP_TOOLS and not c.get("is_error", False)
-                      and c.get("result_chars", 0) > 0}
         cap = sc.get("capability_functions") or {}
         known = (r.get("trace") or {}).get("telemetry") != "unavailable"
-        cap_cov = {k: (fn in decompiled) if known else None for k, fn in cap.items()}
+        cap_cov = {k: bool(body_hits(r, fn)) if known else None for k, fn in cap.items()}
         # Three-stage write taxonomy, kept distinct so a read-only refusal is
         # still visible as a request that was blocked (not as "no request").
         writes = [c for c in r.get("calls", []) if c.get("write")]
@@ -170,7 +168,7 @@ def _load_runs(run_id):
             "error": err,
             "recall": (len(exp & found) / len(exp)) if (exp and not err) else None,
             # Findings outside the source ground truth (unsupported claims).
-            "unsupported": len(found - exp) if not err else None,
+            "unsupported": len(found - exp) if not err and label_scope(sc) == "exhaustive" else None,
             "cap_cov": cap_cov,
             "write_requested": bool(writes),
             "write_accepted": any(not c["is_error"] for c in writes),
@@ -191,6 +189,9 @@ def _fingerprints(meta):
             "sample": s.get("sample"), "variant": v,
             "expected_findings": sorted(s.get("expected_findings", [])),
             "capability_functions": s.get("capability_functions") or {},
+            "label_scope": label_scope(s),
+            "measurement_protocol": meta.get("measurement_protocol", "legacy-call-proxy-v1"),
+            "input_paths": meta.get("input_paths", "legacy-variant-path-v1"),
             "binary_sha256": (man.get(v) or {}).get("sha256"),
         }
     return fp
@@ -247,6 +248,8 @@ def compare(base_id, cand_id):
         bcov = [1 for b, _ in cov_pairs if b["cap_cov"]["persistence"]]
         ccov = [1 for _, c in cov_pairs if c["cap_cov"]["persistence"]]
         has_cap = bool(cov_pairs)
+        unsupported_pairs = [(b, c) for b, c in valid
+                             if b["unsupported"] is not None and c["unsupported"] is not None]
         rows.append({
             "scenario": sc, "n": len(valid),
             "base_recall": sum(b["recall"] for b, _ in valid) / len(valid),
@@ -257,9 +260,9 @@ def compare(base_id, cand_id):
             "cand_cov": (len(ccov) / len(cov_pairs)) if has_cap else None,
             "cov_delta": ((len(ccov) - len(bcov)) / len(cov_pairs)) if has_cap else None,
             # Seed-paired totals; a rise means the candidate claims more behaviour that is not there.
-            "base_unsupported": sum(b["unsupported"] for b, _ in valid),
-            "cand_unsupported": sum(c["unsupported"] for _, c in valid),
-            "unsupported_delta": sum(c["unsupported"] - b["unsupported"] for b, c in valid),
+            "base_unsupported": sum(b["unsupported"] for b, _ in unsupported_pairs) if unsupported_pairs else None,
+            "cand_unsupported": sum(c["unsupported"] for _, c in unsupported_pairs) if unsupported_pairs else None,
+            "unsupported_delta": sum(c["unsupported"] - b["unsupported"] for b, c in unsupported_pairs) if unsupported_pairs else None,
         })
     def wsum(runs, key):
         return sum(1 for v in runs.values() if v[key])

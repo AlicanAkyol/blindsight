@@ -20,7 +20,7 @@ For the bundled GhidraMCP + local Ollama runner:
 uv tool install '/path/to/blindsight[ghidra]'
 ```
 
-Or install the local wheel with `pipx install /path/to/blindsight-0.3.0-py3-none-any.whl`.
+Or install the release wheel with `pipx install /path/to/blindsight-0.4.0-py3-none-any.whl`.
 Once the package is published, `uvx --from blindsight ral check` can use the same entrypoint;
 that registry command is not available yet.
 

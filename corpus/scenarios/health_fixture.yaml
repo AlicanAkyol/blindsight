@@ -10,6 +10,7 @@
 task: triage_readonly
 
 defaults:
+  label_scope: exhaustive
   sample: health_fixture
   expected_findings: [network_connection, persistence, host_info_collection]
   expected_verdict: malicious
