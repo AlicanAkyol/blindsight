@@ -1,9 +1,10 @@
 """Versioned stdin/stdout adapter for user-owned agents. No shell execution."""
 import json
+import math
 import os
 import signal
 import subprocess
-import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -12,6 +13,88 @@ from inputs import opaque_binary
 
 PROTOCOL = "ral.target.v1"
 MAX_OUTPUT = 2 * 1024 * 1024
+
+
+def _capture(command, payload, *, cwd=None, env=None, timeout=600):
+    """Bound both pipes while running; adapter processes are still trusted code."""
+    if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("target timeout must be finite and positive")
+    proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, cwd=cwd, env=env,
+                            start_new_session=True, bufsize=0)
+    deadline = time.monotonic() + timeout
+    failed = threading.Event()
+    failures = []
+    response = bytearray()
+
+    def stop():
+        try:
+            if os.name == "posix":
+                os.killpg(proc.pid, signal.SIGKILL)
+            elif proc.poll() is None:
+                proc.kill()
+        except ProcessLookupError:
+            pass
+
+    def read(stream, name, retain=False):
+        size = 0
+        try:
+            while chunk := stream.read(min(65536, MAX_OUTPUT + 1 - size)):
+                size += len(chunk)
+                if size > MAX_OUTPUT:
+                    failures.append(f"target {name} exceeds 2 MiB")
+                    failed.set()
+                    break
+                if retain:
+                    response.extend(chunk)
+        except OSError:
+            failures.append(f"could not capture target {name}")
+            failed.set()
+        finally:
+            stream.close()
+
+    def write():
+        try:
+            view = memoryview(payload)
+            while view:
+                written = proc.stdin.write(view)
+                if not written:
+                    break
+                view = view[written:]
+        except (BrokenPipeError, OSError):
+            pass
+        finally:
+            proc.stdin.close()
+
+    workers = [threading.Thread(target=read, args=(proc.stdout, "response", True), daemon=True),
+               threading.Thread(target=read, args=(proc.stderr, "stderr"), daemon=True),
+               threading.Thread(target=write, daemon=True)]
+    try:
+        for worker in workers:
+            worker.start()
+        while proc.poll() is None:
+            if failed.is_set():
+                raise ValueError(failures[0])
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ValueError("target timed out")
+            failed.wait(min(0.05, remaining))
+        # An episode owns its subprocess group. Stop children that outlive the adapter.
+        stop()
+        for worker in workers:
+            worker.join(timeout=1)
+        if failed.is_set():
+            raise ValueError(failures[0])
+        if any(worker.is_alive() for worker in workers):
+            raise ValueError("target output capture did not complete")
+        if proc.returncode:
+            raise ValueError(f"target exited with code {proc.returncode}; inspect the adapter locally")
+        return bytes(response)
+    finally:
+        stop()
+        proc.wait(timeout=2)
+        for worker in workers:
+            worker.join(timeout=1)
 
 
 def validate_response(obj):
@@ -35,7 +118,7 @@ def validate_response(obj):
                 raise ValueError("each call needs an args object")
             if any(not isinstance(c.get(k), bool) for k in ("write", "is_error")):
                 raise ValueError("each call needs boolean write and is_error fields")
-            if not isinstance(c.get("result_chars"), int) or c["result_chars"] < 0:
+            if type(c.get("result_chars")) is not int or c["result_chars"] < 0:
                 raise ValueError("each call needs non-negative result_chars")
             if "delivery_recorded" in c:
                 if type(c["delivery_recorded"]) is not bool:
@@ -58,25 +141,10 @@ def run_one(target, scenario, binary, seed, prompt=None):
         if not isinstance(command, list) or not command or any(not isinstance(x, str) for x in command):
             raise ValueError("target.command must be a non-empty argv list")
         env = dict(os.environ, **target.get("env", {}))
-        with opaque_binary(binary) as opaque, tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+        with opaque_binary(binary) as opaque:
             request["binary"] = str(opaque)
-            proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=out, stderr=err,
-                                    cwd=target.get("cwd"), env=env, start_new_session=True)
-            try:
-                proc.communicate((json.dumps(request) + "\n").encode(), timeout=target.get("timeout", 600))
-            except subprocess.TimeoutExpired:
-                if os.name == "posix":
-                    os.killpg(proc.pid, signal.SIGKILL)
-                else:
-                    proc.kill()
-                proc.communicate()
-                raise ValueError("target timed out")
-            if proc.returncode:
-                raise ValueError(f"target exited with code {proc.returncode}; inspect the adapter locally")
-            out.seek(0)
-            data = out.read(MAX_OUTPUT + 1)
-            if len(data) > MAX_OUTPUT:
-                raise ValueError("target response exceeds 2 MiB")
+            data = _capture(command, (json.dumps(request) + "\n").encode(),
+                            cwd=target.get("cwd"), env=env, timeout=target.get("timeout", 600))
             obj = validate_response(json.loads(data))
         record["report"] = obj["report"]
         record["calls"] = obj.get("calls", [])

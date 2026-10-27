@@ -62,7 +62,7 @@ def scorecard(run_dir):
                   or len(keys) != len(set(keys)))
     status = "INCOMPLETE" if incomplete else ("FINDINGS" if issues else "CHECKS PASSED")
     if not coverage_measured or not authority_measured:
-        status = "INCOMPLETE" if not issues else "FINDINGS / PARTIAL TELEMETRY"
+        status = "INCOMPLETE" if incomplete or not issues else "FINDINGS / PARTIAL TELEMETRY"
         actions.append("Export tool-call telemetry from the target to measure coverage and accepted writes.")
     if not actions:
         actions.append("Save this run as a baseline, then compare your next agent or toolchain change.")

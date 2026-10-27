@@ -69,7 +69,21 @@ records, not new model inference. Demo exit 0 means the replay behaved as
 expected; it is not a security pass. Downloads are needed for installation;
 the installed `ral demo` runs offline. [Details and limits](docs/demo.md).
 
-From a clone (not yet on PyPI):
+To check your own agent in one command:
+
+```sh
+uvx --from 'git+https://github.com/AlicanAkyol/blindsight' ral check \
+  --target-command '/path/to/agent-venv/bin/python /path/to/adapter.py' \
+  --html report.html
+```
+
+Your adapter must implement [ral.target.v1](docs/target-protocol.md). Use its
+own Python/runtime when it has dependencies. No `ral init` or YAML is needed;
+the command and fixture results are recorded under `.ral/results/`. The adapter
+runs with your permissions; this is not a sandbox. Each episode has a timeout
+and bounded stdout/stderr capture. See [security boundaries](docs/security-boundaries.md).
+
+For a reusable project configuration, install from a clone (not yet on PyPI):
 
 ```sh
 git clone https://github.com/AlicanAkyol/blindsight && cd blindsight

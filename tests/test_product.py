@@ -5,6 +5,7 @@ The adapter below is simulated test input, never a claimed RE result.
 """
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -77,6 +78,56 @@ class ProductTests(unittest.TestCase):
         before = (self.cwd / ".ral.yaml").read_bytes()
         self.assertEqual(self.cli("init").returncode, 2)
         self.assertEqual((self.cwd / ".ral.yaml").read_bytes(), before)
+
+    def test_inline_target_needs_no_init_and_does_not_use_a_shell(self):
+        spaced = self.cwd / "my adapter.py"
+        spaced.write_text(ADAPTER)
+        command = shlex.join([sys.executable, str(spaced), ";touch unexpected-shell-file"])
+        result = self.cli("check", "--target-command", command, "--html", "inline.html")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.cwd / ".ral.yaml").exists())
+        self.assertFalse((self.cwd / "unexpected-shell-file").exists())
+        latest = json.loads((self.cwd / ".ral/latest.json").read_text())
+        meta = json.loads((Path(latest["run_dir"]) / "meta.json").read_text())
+        self.assertEqual(meta["target"]["command"], shlex.split(command))
+        card = json.loads((Path(latest["run_dir"]) / "check.json").read_text())
+        self.assertEqual(card["telemetry"], "target_reported")
+        self.assertEqual(sum(r["valid"] for r in card["rows"]), 4)
+        self.assertTrue((self.cwd / "inline.html").is_file())
+
+    def test_inline_target_preserves_config_and_baseline_gate(self):
+        self.init_target()
+        before = (self.cwd / ".ral.yaml").read_bytes()
+        command = shlex.join([sys.executable, str(self.adapter)])
+        self.assertEqual(self.cli("check", "--target-command", command).returncode, 0)
+        self.assertEqual(self.cli("baseline", "save").returncode, 0)
+        result = self.cli("check", "--target-command", command + " --extra-findings", "--baseline", "saved")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("GATE FAIL", result.stdout)
+        self.assertEqual((self.cwd / ".ral.yaml").read_bytes(), before)
+
+    def test_inline_target_invalid_options_do_not_execute(self):
+        command = shlex.join([sys.executable, str(self.adapter)])
+        for timeout in ("0", "-1", "nan", "inf"):
+            with self.subTest(timeout=timeout):
+                self.assertEqual(self.cli("check", "--target-command", command,
+                                          "--target-timeout", timeout).returncode, 2)
+        self.assertEqual(self.cli("check", "--target-command", "  ").returncode, 2)
+        self.assertEqual(self.cli("check", "--target-command", command, "--profile", "other").returncode, 2)
+        self.assertEqual(self.cli("check", "--target-timeout", "3").returncode, 2)
+        self.assertFalse((self.cwd / ".ral").exists())
+
+    def test_inline_target_timeout_is_incomplete_not_success(self):
+        sleeping = self.cwd / "sleeping.py"
+        sleeping.write_text("import time; time.sleep(30)")
+        result = self.cli("check", "--target-command", shlex.join([sys.executable, str(sleeping)]),
+                          "--target-timeout", "0.1")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        latest = json.loads((self.cwd / ".ral/latest.json").read_text())
+        records = [json.loads(l) for l in (Path(latest["run_dir"]) / "runs.jsonl").read_text().splitlines()]
+        self.assertTrue(all(r.get("report") is None and "timed out" in r["error"] for r in records))
+        card = json.loads((Path(latest["run_dir"]) / "check.json").read_text())
+        self.assertEqual(card["status"], "INCOMPLETE")
 
     def test_installed_target_check_reports_baseline_and_gate(self):
         self.init_target()

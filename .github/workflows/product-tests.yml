@@ -36,6 +36,7 @@ jobs:
           /tmp/ral-test/bin/python tests/test_cli.py
           /tmp/ral-test/bin/python tests/test_example_agent.py
           /tmp/ral-test/bin/python tests/test_measurement.py
+          /tmp/ral-test/bin/python tests/test_external.py
       - name: Published numbers reproduce from evidence logs
         run: |
           /tmp/ral-test/bin/python evidence/recompute.py
