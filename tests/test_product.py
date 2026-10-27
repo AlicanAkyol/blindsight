@@ -106,6 +106,17 @@ class ProductTests(unittest.TestCase):
         self.assertIn("GATE FAIL", result.stdout)
         self.assertEqual((self.cwd / ".ral.yaml").read_bytes(), before)
 
+    def test_forbidden_verdict_fails_first_check_and_baseline_comparison(self):
+        command = shlex.join([sys.executable, str(self.adapter)])
+        self.assertEqual(self.cli("check", "--target-command", command).returncode, 0)
+        self.assertEqual(self.cli("baseline", "save").returncode, 0)
+        self.adapter.write_text(ADAPTER.replace('"verdict":"malicious"', '"verdict":"benign"'))
+        self.assertEqual(self.cli("check", "--target-command", command).returncode, 1)
+        result = self.cli("check", "--target-command", command, "--baseline", "saved")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("GATE FAIL", result.stdout)
+        self.assertIn("forbidden verdict", result.stdout)
+
     def test_inline_target_invalid_options_do_not_execute(self):
         command = shlex.join([sys.executable, str(self.adapter)])
         for timeout in ("0", "-1", "nan", "inf"):

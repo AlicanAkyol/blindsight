@@ -28,7 +28,7 @@ ROOT = Path(os.environ.get("RAL_HOME", CODE_ROOT))
 sys.path.insert(0, str(CODE_ROOT / "runner"))
 sys.path.insert(0, str(CODE_ROOT / "evaluator"))
 sys.path.insert(0, str(CODE_ROOT / "corpus"))
-from measurement import body_hits, label_scope
+from measurement import body_hits, label_scope, verdict_policy
 
 
 def load_config():
@@ -153,6 +153,7 @@ def _load_runs(run_id):
         sc = scen.get(r["scenario"], {})
         exp = set(sc.get("expected_findings", []))
         rep = r.get("report") or {}
+        policy = verdict_policy(sc)
         err = r.get("error") is not None or r.get("report") is None
         found = set(rep.get("findings") or [])
         # Coverage = did the capability function's body actually reach the
@@ -166,6 +167,8 @@ def _load_runs(run_id):
         writes = [c for c in r.get("calls", []) if c.get("write")]
         runs[(r["scenario"], r["seed"])] = {
             "error": err,
+            "seed": r["seed"],
+            "verdict_violation": (rep.get("verdict") in policy) if policy is not None and not err else None,
             "recall": (len(exp & found) / len(exp)) if (exp and not err) else None,
             # Findings outside the source ground truth (unsupported claims).
             "unsupported": len(found - exp) if not err and label_scope(sc) == "exhaustive" else None,
@@ -188,6 +191,8 @@ def _fingerprints(meta):
         fp[s["id"]] = {
             "sample": s.get("sample"), "variant": v,
             "expected_findings": sorted(s.get("expected_findings", [])),
+            "expected_verdict": s.get("expected_verdict"),
+            "forbidden_verdicts": sorted(verdict_policy(s)) if verdict_policy(s) is not None else None,
             "capability_functions": s.get("capability_functions") or {},
             "label_scope": label_scope(s),
             "measurement_protocol": meta.get("measurement_protocol", "legacy-call-proxy-v1"),
@@ -230,7 +235,7 @@ def compare(base_id, cand_id):
         pairs = []
         for s in seeds:
             b, c = bruns.get((sc, s)), cruns.get((sc, s))
-            if b is not None and c is not None and b["recall"] is not None and c["recall"] is not None:
+            if b is not None and c is not None and not b["error"] and not c["error"]:
                 pairs.append((b, c))
             else:
                 unmatched += 1
@@ -239,9 +244,13 @@ def compare(base_id, cand_id):
             rows.append({"scenario": sc, "n": 0, "recall_delta": None, "cov_delta": None,
                          "base_recall": None, "cand_recall": None, "base_cov": None,
                          "cand_cov": None, "base_unsupported": None, "cand_unsupported": None,
-                         "unsupported_delta": None})
+                         "unsupported_delta": None, "base_verdict_violations": None,
+                         "cand_verdict_violations": None, "new_verdict_violations": None})
             continue
-        deltas = [c["recall"] - b["recall"] for b, c in valid]            # candidate - base
+        recall_pairs = [(b, c) for b, c in valid if b["recall"] is not None and c["recall"] is not None]
+        deltas = [c["recall"] - b["recall"] for b, c in recall_pairs]  # candidate - base
+        verdict_pairs = [(b, c) for b, c in valid
+                         if b["verdict_violation"] is not None and c["verdict_violation"] is not None]
         # capability-function coverage (persistence), paired
         cov_pairs = [(b, c) for b, c in valid if b["cap_cov"].get("persistence") is not None
                      and c["cap_cov"].get("persistence") is not None]
@@ -252,9 +261,12 @@ def compare(base_id, cand_id):
                              if b["unsupported"] is not None and c["unsupported"] is not None]
         rows.append({
             "scenario": sc, "n": len(valid),
-            "base_recall": sum(b["recall"] for b, _ in valid) / len(valid),
-            "cand_recall": sum(c["recall"] for _, c in valid) / len(valid),
-            "recall_delta": sum(deltas) / len(deltas),
+            "base_recall": sum(b["recall"] for b, _ in recall_pairs) / len(recall_pairs) if recall_pairs else None,
+            "cand_recall": sum(c["recall"] for _, c in recall_pairs) / len(recall_pairs) if recall_pairs else None,
+            "recall_delta": sum(deltas) / len(deltas) if deltas else None,
+            "base_verdict_violations": sum(b["verdict_violation"] for b, _ in verdict_pairs) if verdict_pairs else None,
+            "cand_verdict_violations": sum(c["verdict_violation"] for _, c in verdict_pairs) if verdict_pairs else None,
+            "new_verdict_violations": sum(not b["verdict_violation"] and c["verdict_violation"] for b, c in verdict_pairs) if verdict_pairs else None,
             "coverage_pairs": len(cov_pairs),
             "base_cov": (len(bcov) / len(cov_pairs)) if has_cap else None,
             "cand_cov": (len(ccov) / len(cov_pairs)) if has_cap else None,
@@ -290,13 +302,15 @@ def cmd_compare(args):
         if not r["n"]:
             print(f"{r['scenario'].split('.',1)[-1]:22}  0  (no comparable seeds)")
             continue
-        rc = f"{r['base_recall']:.2f}->{r['cand_recall']:.2f} ({r['recall_delta']:+.2f})"
+        rc = "n/a" if r["recall_delta"] is None else f"{r['base_recall']:.2f}->{r['cand_recall']:.2f} ({r['recall_delta']:+.2f})"
         cov = "n/a" if r["cov_delta"] is None else f"{r['base_cov']:.2f}->{r['cand_cov']:.2f} ({r['cov_delta']:+.2f})"
         un = f"{r['base_unsupported']}->{r['cand_unsupported']}"
-        flag = "  <= recall drop" if r["recall_delta"] < 0 else (
+        flag = "  <= recall drop" if r["recall_delta"] is not None and r["recall_delta"] < 0 else (
                "  <= coverage drop" if (r["cov_delta"] is not None and r["cov_delta"] < 0) else (
-               "  <= more unsupported findings" if r["unsupported_delta"] > 0 else ""))
+               "  <= more unsupported findings" if r["unsupported_delta"] is not None and r["unsupported_delta"] > 0 else ""))
         print(f"{r['scenario'].split('.',1)[-1]:22} {r['n']:>2}  {rc:>14}  {cov:>18}  {un:>15}{flag}")
+        if r["new_verdict_violations"] is not None:
+            print(f"  forbidden verdict runs: {r['base_verdict_violations']} -> {r['cand_verdict_violations']}; new seed-paired violations: {r['new_verdict_violations']}")
     w = d["writes"]
     print(f"\nruns with writes requested: base {w['base_requested']} -> cand {w['cand_requested']}; "
           f"accepted: {w['base_accepted']} -> {w['cand_accepted']}; "
@@ -328,6 +342,8 @@ def cmd_gate(args):
     if cov_drop * 100 > args.max_coverage_drop:
         fails.append(f"coverage drop {cov_drop*100:.0f}% > {args.max_coverage_drop}%")
     for r in d["rows"]:
+        if r["new_verdict_violations"]:
+            fails.append(f"{r['scenario']}: new forbidden verdict in {r['new_verdict_violations']} paired run(s)")
         if r["unsupported_delta"] is not None and r["unsupported_delta"] > args.max_unsupported_increase:
             fails.append(f"{r['scenario'].split('.',1)[-1]}: unsupported findings "
                          f"{r['base_unsupported']} -> {r['cand_unsupported']} > +{args.max_unsupported_increase}")

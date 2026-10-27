@@ -6,7 +6,7 @@ import re
 import shlex
 from collections import Counter, defaultdict
 from pathlib import Path
-from .runner.measurement import body_hits, label_scope
+from .runner.measurement import body_hits, label_scope, verdict_policy
 
 
 def read_run(directory):
@@ -46,6 +46,7 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
     bm, bs, br = read_run(base_dir)
     cm, cs, cr = read_run(candidate_dir)
     events, coverage_losses, new_unsupported, unreviewed = [], [], [], []
+    verdict_regressions = []
     for key in sorted(set(br) & set(cr)):
         sid, seed = key
         if sid not in bs or sid not in cs or sid in comparison["incompatible"]:
@@ -53,6 +54,13 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
         b, c = br[key]["record"], cr[key]["record"]
         if b.get("error") or c.get("error") or not b.get("report") or not c.get("report"):
             continue
+        policy = verdict_policy(bs[sid])
+        if policy is not None and b["report"]["verdict"] not in policy and c["report"]["verdict"] in policy:
+            verdict_regressions.append({"scenario": sid, "seed": seed,
+                                        "baseline_verdict": b["report"]["verdict"],
+                                        "candidate_verdict": c["report"]["verdict"],
+                                        "baseline_evidence": {"file": br[key]["file"], "line": br[key]["line"]},
+                                        "candidate_evidence": {"file": cr[key]["file"], "line": cr[key]["line"]}})
         expected = set(bs[sid]["expected_findings"])
         added = sorted(set(c["report"]["findings"]) - expected - set(b["report"]["findings"]))
         if added:
@@ -105,6 +113,8 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
         reasons.append("Artifact or ground-truth identity changed; do not interpret score differences.")
     else:
         for row in comparison["rows"]:
+            if row["new_verdict_violations"]:
+                reasons.append(f"{row['scenario']}: new forbidden verdict in {row['new_verdict_violations']} paired run(s)")
             if row["recall_delta"] is not None and -row["recall_delta"] * 100 > max_recall_drop + 1e-9:
                 reasons.append(f"{row['scenario']}: recall drop exceeds {max_recall_drop:g} percentage points")
             if row["cov_delta"] is not None and -row["cov_delta"] * 100 > max_coverage_drop + 1e-9:
@@ -127,6 +137,7 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
             "finding_losses": events, "coverage_losses": coverage_losses,
             "new_unsupported_findings": new_unsupported, "reasons": reasons,
             "unreviewed_findings": unreviewed,
+            "verdict_regressions": verdict_regressions,
             "classification_counts": dict(Counter(e["classification"] for e in events)),
             "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported."}
 
@@ -135,6 +146,13 @@ def markdown(report):
     lines = [f"# RAL release check — {report['status']}", "",
              f"Baseline: `{report['baseline']}` · Candidate: `{report['candidate']}`", ""]
     lines += [f"- {r}" for r in report["reasons"]] or ["No regression exceeded the configured thresholds."]
+    lines += ["", "## Verdict regressions", ""]
+    for event in report.get("verdict_regressions", []):
+        lines.append(f"- {event['scenario']} seed {event['seed']}: {event['baseline_verdict']} -> "
+                     f"{event['candidate_verdict']} (forbidden); "
+                     f"{event['candidate_evidence']['file']}:{event['candidate_evidence']['line']}")
+    if not report.get("verdict_regressions"):
+        lines.append("No new forbidden verdict in valid paired episodes with a configured policy.")
     lines += ["", "## Finding losses", ""]
     if not report["finding_losses"]:
         lines.append("No expected finding was lost in a valid paired episode.")
@@ -185,9 +203,11 @@ def html_report(report):
     rows = []
     for row in report["comparison"]["rows"]:
         rows.append("<tr>" + "".join(f"<td>{esc(x)}</td>" for x in (
-            row["scenario"], row["n"], delta(row["base_recall"], row["cand_recall"]),
+            row["scenario"], row["n"], "not applicable" if row["n"] and row["recall_delta"] is None else delta(row["base_recall"], row["cand_recall"]),
             delta(row["base_cov"], row["cand_cov"]),
-            "—" if row["base_unsupported"] is None else f"{row['base_unsupported']} → {row['cand_unsupported']}")) + "</tr>")
+            "—" if row["base_unsupported"] is None else f"{row['base_unsupported']} → {row['cand_unsupported']}",
+            "not configured" if row["new_verdict_violations"] is None else
+            f"{row['base_verdict_violations']} → {row['cand_verdict_violations']} (new: {row['new_verdict_violations']})")) + "</tr>")
     reasons = "".join(f"<li>{esc(r)}</li>" for r in report["reasons"])
     if not reasons:
         reasons = "<li>No regression exceeded your configured thresholds.</li>"
@@ -228,9 +248,13 @@ def html_report(report):
             "<h1>What changed in your RE agent?</h1><p class='meta'>Baseline " + esc(report["baseline"]) +
             "<br>Candidate " + esc(report["candidate"]) + "</p><ul>" + reasons + "</ul></header>"
             "<section class='overview'><h2>Paired results</h2><div class='scroll'><table><thead><tr>"
-            "<th>Scenario</th><th>Valid pairs</th><th>Capability recall</th><th>Persistence body coverage</th><th>Findings outside ground truth</th>"
+            "<th>Scenario</th><th>Valid pairs</th><th>Capability recall</th><th>Persistence body coverage</th><th>Findings outside ground truth</th><th>Forbidden verdict runs</th>"
             "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></section><h2>What to inspect next</h2>" +
             ("".join(panels) or "<p>No finding loss to diagnose in valid paired episodes.</p>") +
+            ("".join(f"<article><h3>Verdict regression</h3><p>{esc(e['scenario'])}, seed {esc(e['seed'])}: "
+                     f"{esc(e['baseline_verdict'])} → {esc(e['candidate_verdict'])} (forbidden)</p>"
+                     f"<p><code>{esc(e['candidate_evidence']['file'])}:{e['candidate_evidence']['line']}</code></p></article>"
+                     for e in report.get("verdict_regressions", []))) +
             ("".join(f"<article><h3>{esc(e['scenario'])} · seed {esc(e['seed'])}</h3><p>New finding(s) outside ground truth: "
                      f"{esc(', '.join(e['findings']))}</p><p><code>{esc(e['candidate_evidence']['file'])}:"
                      f"{e['candidate_evidence']['line']}</code></p></article>" for e in report["new_unsupported_findings"])) +

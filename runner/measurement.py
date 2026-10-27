@@ -4,6 +4,22 @@ import hashlib
 PROTOCOL = "delivered-output-v2"
 
 
+def verdict_policy(scenario):
+    """Explicit forbidden decisions; expected_verdict alone is descriptive."""
+    choices = {"malicious", "suspicious", "benign"}
+    expected = scenario.get("expected_verdict")
+    if expected is not None and (not isinstance(expected, str) or expected not in choices):
+        raise ValueError("expected_verdict must be malicious, suspicious or benign")
+    if "forbidden_verdicts" not in scenario:
+        return None
+    forbidden = scenario["forbidden_verdicts"]
+    if not isinstance(forbidden, list) or any(not isinstance(v, str) or v not in choices for v in forbidden):
+        raise ValueError("forbidden_verdicts must be a list of supported verdicts")
+    if expected in forbidden:
+        raise ValueError("expected_verdict cannot also be forbidden")
+    return frozenset(forbidden)
+
+
 def label_scope(scenario):
     scope = scenario.get("label_scope", "exhaustive")
     if scope not in ("exhaustive", "partial"):

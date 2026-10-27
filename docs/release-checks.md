@@ -50,8 +50,13 @@ only causally informative under a controlled intervention; running the same
 case again is not itself that intervention. External target telemetry is
 labelled as self-reported. Successful calls do not prove full model attention.
 
-The gate uses per-scenario aggregate thresholds. Individual lost findings can
+Recall, coverage and unsupported-finding gates use per-scenario aggregate thresholds. Individual lost findings can
 appear in the report even if the aggregate improves and the gate passes.
+Verdict policy is different: any newly forbidden decision on a paired seed
+fails, even if another seed recovered. The report lists its raw evidence.
+An unchanged forbidden baseline verdict remains visible but is not a new
+regression. Missing verdict policy is labelled unconfigured; see
+[measurement.md](measurement.md) for allowed decisions and empty finding sets.
 Run compatibility and missing episodes are checked before approving a release.
 
 ## Turn a discovered miss into a persistent case
