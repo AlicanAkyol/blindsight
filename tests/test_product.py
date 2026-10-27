@@ -42,6 +42,36 @@ class ProductTests(unittest.TestCase):
         self.assertIn("historical", r.stdout)
         self.assertTrue((self.cwd / ".ral/build/clean/agent_fixture").exists())
 
+    def test_recorded_demo_works_without_config_or_agent(self):
+        (self.cwd / ".ral.yaml").write_text("not: [valid yaml")
+        result = self.cli("demo")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        root = self.cwd / "blindsight-demo"
+        manifest = json.loads((root / "manifest.json").read_text())
+        self.assertEqual([r["status"] for r in manifest["results"].values()], ["PASS", "FAIL", "FAIL"])
+        self.assertFalse((self.cwd / ".ral").exists())
+        report = json.loads((root / "policy-change/release.json").read_text())
+        self.assertTrue(any(e["scenario"] == "health.h_neutral" and e["seed"] == 5 and
+                            "credential_access" in e["findings"] for e in report["new_unsupported_findings"]))
+        reverse = json.loads((root / "coverage-loss/release.json").read_text())
+        self.assertTrue(reverse["coverage_losses"])
+        self.assertNotIn(str(self.cwd), json.dumps(report))
+        for file in (root / "evidence").glob("*/runs.jsonl"):
+            self.assertEqual(len(file.read_text().splitlines()), 40)
+        self.assertIn("successful-call proxy", (root / "index.html").read_text())
+        before = (root / "index.html").read_bytes()
+        self.assertEqual(self.cli("demo").returncode, 2)
+        self.assertEqual(before, (root / "index.html").read_bytes())
+
+    def test_demo_checksum_failure_creates_no_report(self):
+        from unittest.mock import patch
+        from blindsight import offline_demo
+        output = self.cwd / "bad-demo"
+        with patch.dict(offline_demo.HASHES, {f"{offline_demo.NATURAL}/meta.json": "0" * 64}):
+            with self.assertRaisesRegex(ValueError, "checksum"):
+                offline_demo.render(output)
+        self.assertFalse(output.exists())
+
     def test_init_does_not_overwrite(self):
         self.init_target()
         before = (self.cwd / ".ral.yaml").read_bytes()

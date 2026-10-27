@@ -310,6 +310,9 @@ def main(argv=None):
     ap.add_argument("--config", type=Path, default=Path(".ral.yaml"))
     ap.add_argument("--state", type=Path, default=Path(".ral"), help="writable workspace (default: .ral)")
     sub = ap.add_subparsers(dest="cmd", required=True)
+    demo = sub.add_parser("demo", help="replay published pilot evidence offline; no model or Ghidra")
+    demo.add_argument("--output", type=Path, default=Path("blindsight-demo"),
+                      help="new output directory (never overwrites existing files)")
     init = sub.add_parser("init", help="discover local tools and create a portable project config")
     init.add_argument("--target-command", help="argv command for your own agent; no shell is used")
     doc = sub.add_parser("doctor", help="diagnose the chosen stack with actionable setup instructions")
@@ -353,6 +356,9 @@ def main(argv=None):
         args, rest = ap.parse_known_args(argv)
         if rest:
             ap.error("unrecognized arguments: " + " ".join(rest))
+        if args.cmd == "demo":
+            from .offline_demo import render
+            return render(args.output)
         if args.cmd in ("compare", "gate"):
             os.environ["RAL_HOME"] = str(args.state.expanduser().resolve())
             resolve = lambda p: Path(p).resolve() if Path(p).exists() else args.state.resolve() / "results" / p

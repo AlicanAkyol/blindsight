@@ -45,6 +45,20 @@ See [measurement changes](docs/measurement.md).
 
 ## Quick start
 
+Try the recorded demo first. With Python 3.10–3.13 and [uv](https://docs.astral.sh/uv/),
+one command generates a browser report without Ghidra, Docker, a model or an API key:
+
+```sh
+uvx --from 'git+https://github.com/AlicanAkyol/blindsight' ral demo
+```
+
+Open `blindsight-demo/index.html`. The replay shows a no-change PASS control,
+a policy change that improves recall but still FAILs on a new unsupported
+finding, and a reversed comparison with coverage loss. It uses published pilot
+records, not new model inference. Demo exit 0 means the replay behaved as
+expected; it is not a security pass. Downloads are needed for installation;
+the installed `ral demo` runs offline. [Details and limits](docs/demo.md).
+
 From a clone (not yet on PyPI):
 
 ```sh

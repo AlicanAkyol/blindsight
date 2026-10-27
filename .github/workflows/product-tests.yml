@@ -24,6 +24,12 @@ jobs:
         run: |
           /tmp/ral-test/bin/python tests/test_product.py
           /tmp/ral-test/bin/python tests/test_release.py
+      - name: Export recorded browser demo without a model
+        run: /tmp/ral-test/bin/ral demo --output /tmp/recorded-demo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recorded-demo-${{ matrix.os }}-${{ matrix.python }}
+          path: /tmp/recorded-demo
       - name: Existing statistics and gate tests
         run: |
           /tmp/ral-test/bin/python tests/test_stats.py
