@@ -45,6 +45,9 @@ See [measurement changes](docs/measurement.md).
 
 ## Quick start
 
+**[Open the recorded browser demo — no install](https://alicanakyol.github.io/blindsight/).**
+It shows real historical records, not a live model run.
+
 Try the recorded demo first. With Python 3.10–3.13 and [uv](https://docs.astral.sh/uv/),
 one command generates a browser report without Ghidra, Docker, a model or an API key:
 

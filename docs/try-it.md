@@ -1,6 +1,7 @@
 # A focused first trial
 
-Start with `ral demo` ([instructions](demo.md)). Open the policy-change report
+Start with the [hosted demo](https://alicanakyol.github.io/blindsight/), or use
+`ral demo` ([instructions](demo.md)). Open the policy-change report
 and check why improved recall still produces FAIL. This needs no RE stack and
 tests the report's usefulness, not your agent's performance.
 

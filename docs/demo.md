@@ -2,6 +2,10 @@
 
 ## One-command recorded demo
 
+**[Open the hosted demo](https://alicanakyol.github.io/blindsight/)** to inspect
+the reports without installing anything. The hosted view is a fixed snapshot
+of the same recorded evidence; it does not run a model in the browser.
+
 With Python 3.10–3.13 and uv installed:
 
 ```sh
