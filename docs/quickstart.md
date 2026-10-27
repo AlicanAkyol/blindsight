@@ -5,6 +5,42 @@ fixtures. It does not scan arbitrary malware or certify a stack as secure.
 Your target is responsible for analysing binaries; RAL records and evaluates
 its results. Start with `quick`, then save a baseline before changing your agent.
 
+## One command with your existing agent
+
+With Python 3.10–3.13 and uv installed, an existing `ral.target.v1` adapter can
+be checked directly:
+
+```sh
+uvx --from 'git+https://github.com/AlicanAkyol/blindsight' ral check \
+  --target-command '/path/to/agent-venv/bin/python /path/to/adapter.py' \
+  --html report.html
+```
+
+Replace both paths with your actual adapter and its runtime. Installation needs
+network access. RAL does not install or configure the adapter's own analysis
+tools or model. This is a real check of the adapter you provide, not the recorded
+demo. A generic agent command does not automatically implement the
+[adapter protocol](target-protocol.md).
+
+For an installed CLI, the command is simply `ral check --target-command '…'`.
+It creates reports and fixture state without creating or modifying `.ral.yaml`.
+Existing configuration is still read; the inline command overrides the selected
+target for this invocation. `--target-command`, `--target` and `--profile` are
+mutually exclusive. Commands are split into argv and executed without a shell.
+
+Use `--target-timeout 120` to set a per-episode deadline in seconds (default
+600). Non-finite, zero and negative deadlines are rejected. Stdout and stderr
+are each capped at 2 MiB while the adapter runs. An output-limit failure,
+timeout, invalid response or non-zero adapter exit is an execution error and
+returns exit 2, never a successful check. On Linux/macOS, timeout/failure cleanup
+also stops children in the adapter's process group. These controls do not
+isolate the process or limit its other resource use; see
+[security boundaries](security-boundaries.md).
+
+After a completed run, `ral baseline save` retains it for a later
+`ral check --target-command '…' --baseline saved`. First-run misses exit 1;
+baseline comparisons reject new regressions while retaining known misses.
+
 ## Install from the local checkout
 
 Python 3.10–3.13 and uv are required. The package is not on PyPI yet.

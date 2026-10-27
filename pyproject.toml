@@ -1,6 +1,6 @@
 [project]
 name = "blindsight"
-version = "0.4.0"
+version = "0.5.0.dev0"
 description = "Adversarial benchmark and harness for LLM-assisted reverse engineering setups"
 requires-python = ">=3.10,<3.14"
 dependencies = [
@@ -27,5 +27,5 @@ package-dir = {blindsight = "."}
 include-package-data = false
 
 [tool.setuptools.package-data]
-blindsight = ["ral.yaml", "docker/Dockerfile", "docker/Dockerfile.trace"]
+blindsight = ["ral.yaml", "docker/Dockerfile", "docker/Dockerfile.trace", "evidence/20261025T122507Z/meta.json", "evidence/20261025T122507Z/runs.jsonl", "evidence/20261025T134206Z/meta.json", "evidence/20261025T134206Z/runs.jsonl"]
 "blindsight.corpus" = ["scenarios/*.yaml", "src/*.c", "variants/*/variant.h", "variants/*/SRC", "artifacts/*.json", "artifacts/*/agent_fixture", "artifacts/*/health_fixture"]

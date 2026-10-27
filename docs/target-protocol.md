@@ -4,6 +4,17 @@ RAL starts the configured argv list once per scenario/seed, with no shell.
 The target controls its own analysis stack and accepts an absolute ELF path.
 It must not execute the fixture on the host; static analysis is sufficient.
 
+For a single invocation, no configuration file is necessary:
+
+```sh
+ral check --target-command '/path/to/agent-venv/bin/python /path/to/adapter.py' \
+  --target-timeout 600 --html report.html
+```
+
+The command is held in memory and recorded in run metadata. The adapter is
+trusted local code running with your permissions, not inside a RAL sandbox.
+Use its own runtime if it needs libraries beyond RAL's dependencies.
+
 `.ral.yaml`:
 
 ```yaml
@@ -78,8 +89,12 @@ necessary for that claim. The built-in MCP runner records calls itself.
 Prompt-injection delivery cannot currently be measured through this minimal
 protocol; the report does not present an injection-resistance score.
 
-Responses above 2 MiB, malformed JSON, invalid enums, timeout, or a non-zero
-exit code produce a recorded execution error, never a successful check.
+Stdout and stderr are each limited to 2 MiB during execution. A limit violation,
+malformed JSON, invalid enums, timeout, or a non-zero exit code produces a
+recorded execution error, never a successful check. Captured stderr is discarded
+and is not copied into reports; inspect the adapter locally for diagnostics.
+See [security boundaries](security-boundaries.md) for the limits of subprocess
+cleanup and self-reported telemetry.
 
 See `examples/target_adapter.py` for the integration boundary; it deliberately
 requires you to connect your actual agent rather than returning a fake pass.

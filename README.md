@@ -4,7 +4,8 @@
 
 blindsight is a regression harness for LLM-assisted reverse engineering
 (Ghidra + GhidraMCP today). It feeds the agent binaries that differ only in a
-symbol name or a piece of data, verified **behaviour-equivalent**, and records
+symbol name or a piece of data, with no behavioural difference found by a
+layered oracle, and records
 what the agent reads, what it concludes, and which tools it tries to use. The
 `ral` CLI turns that into a CI gate for model, MCP, prompt or defense changes.
 
@@ -15,13 +16,15 @@ renamed to `routine_b` with the code byte-for-byte unchanged. With the neutral
 name, the agent (Qwen3-8B via Ollama, Ghidra 12.1.4 + GhidraMCP 2.0) found
 persistence in **0 of 10** runs (descriptive name: 5/10; exact McNemar
 p=0.0625, just outside significance) and **never decompiled the function in
-any of the 10**. It picks what to read by name.
+any of the 10**. This supports name-sensitive function selection in this pilot.
 
 Putting the code in front of the model brings recall back to 10/10: all
 decompiled bodies on the first fixture, and only the one persistence function
 on a second, independently structured fixture (2/10 → 10/10, McNemar
-p=0.008). It is a *coverage* failure, not a comprehension failure. A coverage-aware policy that
-selects functions by imported-API xrefs instead of names closes the gap
+p=0.008). This supports a missed-function-selection explanation for these cases;
+it does not establish a general limit on comprehension. A coverage-aware policy
+that selects functions by imported-API xrefs instead of names recovered the
+missed persistence observations in these fixtures
 (seed-paired, 10 seeds per scenario):
 
 | scenario | persistence function in context | capability recall |
@@ -30,6 +33,10 @@ selects functions by imported-API xrefs instead of names closes the gap
 | v9 (neutral name) | 0.00 → 1.00 | 0.60 → 1.00 |
 | h_clean (descriptive) | 0.10 → 1.00 | 0.47 → 1.00 |
 | h_neutral (neutral name) | 0.00 → 1.00 | 0.47 → 1.00 |
+
+Improved aggregate recall did not make every paired result better: the policy
+added an unsupported `credential_access` claim in `h_neutral`, seed 5. The strict
+per-scenario gate therefore reports FAIL for this historical comparison.
 
 These are pilot numbers: one model, one toolchain, two small hand-written
 fixtures, and a defense designed after seeing them (in-sample). Hypotheses,
@@ -45,7 +52,38 @@ See [measurement changes](docs/measurement.md).
 
 ## Quick start
 
-From a clone (not yet on PyPI):
+**[Open the recorded browser demo — no install](https://alicanakyol.github.io/blindsight/).**
+It shows real historical records, not a live model run.
+
+Try the recorded demo first. With Python 3.10–3.13 and [uv](https://docs.astral.sh/uv/),
+one command generates a browser report without Ghidra, Docker, a model or an API key:
+
+```sh
+uvx --from 'git+https://github.com/AlicanAkyol/blindsight' ral demo
+```
+
+Open `blindsight-demo/index.html`. The replay shows a no-change PASS control,
+a policy change that improves recall but still FAILs on a new unsupported
+finding, and a reversed comparison with coverage loss. It uses published pilot
+records, not new model inference. Demo exit 0 means the replay behaved as
+expected; it is not a security pass. Downloads are needed for installation;
+the installed `ral demo` runs offline. [Details and limits](docs/demo.md).
+
+To check your own agent in one command:
+
+```sh
+uvx --from 'git+https://github.com/AlicanAkyol/blindsight' ral check \
+  --target-command '/path/to/agent-venv/bin/python /path/to/adapter.py' \
+  --html report.html
+```
+
+Your adapter must implement [ral.target.v1](docs/target-protocol.md). Use its
+own Python/runtime when it has dependencies. No `ral init` or YAML is needed;
+the command and fixture results are recorded under `.ral/results/`. The adapter
+runs with your permissions; this is not a sandbox. Each episode has a timeout
+and bounded stdout/stderr capture. See [security boundaries](docs/security-boundaries.md).
+
+For a reusable project configuration, install from a clone (not yet on PyPI):
 
 ```sh
 git clone https://github.com/AlicanAkyol/blindsight && cd blindsight
@@ -90,7 +128,8 @@ Markdown and HTML in `.ral/results/<id>/`. A quick pass is a smoke-test result,
 not a security certificate. External telemetry is labelled as target-reported;
 missing telemetry does not silently pass coverage/authority checks.
 
-Status: v0.4.0 beta. The package is `blindsight`; its command is `ral`.
+Status: development toward v0.5.0; the previous release is v0.4.0 beta.
+The package is `blindsight`; its command is `ral`.
 Independent clean-machine testing is pending.
 
 **[Watch the demo (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4)** ·

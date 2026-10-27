@@ -5,6 +5,7 @@ import contextlib
 import hashlib
 import importlib.util
 import json
+import math
 import os
 import shlex
 import shutil
@@ -247,6 +248,23 @@ def check(args, cfg, state):
     return code
 
 
+def inline_target(args, cfg):
+    """Build an in-memory target without changing a project configuration."""
+    if args.target_command is None:
+        if args.target_timeout is not None:
+            raise ValueError("--target-timeout requires --target-command")
+        return cfg
+    command = shlex.split(args.target_command)
+    if not command or not command[0]:
+        raise ValueError("--target-command must name an executable and its arguments")
+    timeout = 600 if args.target_timeout is None else args.target_timeout
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("--target-timeout must be a finite positive number of seconds")
+    args.target = "command-line"
+    return {**cfg, "targets": {**cfg.get("targets", {}), args.target: {
+        "command": command, "timeout": timeout}}}
+
+
 def _release_files(base, candidate, state, args):
     from . import diagnostics
     report = diagnostics.release_report(base, candidate, args.max_recall_drop, args.max_coverage_drop,
@@ -310,6 +328,9 @@ def main(argv=None):
     ap.add_argument("--config", type=Path, default=Path(".ral.yaml"))
     ap.add_argument("--state", type=Path, default=Path(".ral"), help="writable workspace (default: .ral)")
     sub = ap.add_subparsers(dest="cmd", required=True)
+    demo = sub.add_parser("demo", help="replay published pilot evidence offline; no model or Ghidra")
+    demo.add_argument("--output", type=Path, default=Path("blindsight-demo"),
+                      help="new output directory (never overwrites existing files)")
     init = sub.add_parser("init", help="discover local tools and create a portable project config")
     init.add_argument("--target-command", help="argv command for your own agent; no shell is used")
     doc = sub.add_parser("doctor", help="diagnose the chosen stack with actionable setup instructions")
@@ -320,6 +341,8 @@ def main(argv=None):
         p = sub.add_parser(name, help="run fixture checks and write a scorecard")
         group = p.add_mutually_exclusive_group()
         group.add_argument("--profile"); group.add_argument("--target")
+        group.add_argument("--target-command", help="run a ral.target.v1 adapter directly; no init or YAML required")
+        p.add_argument("--target-timeout", type=float, help="seconds per episode for --target-command (default: 600)")
         p.add_argument("--suite", default="quick", help="quick (1 seed), ci (3 seeds), full (10 seeds)")
         p.add_argument("--case", help="replay a captured case with its original artifacts, controls and seeds")
         p.add_argument("--json", type=Path); p.add_argument("--markdown", type=Path); p.add_argument("--html", type=Path)
@@ -353,6 +376,9 @@ def main(argv=None):
         args, rest = ap.parse_known_args(argv)
         if rest:
             ap.error("unrecognized arguments: " + " ".join(rest))
+        if args.cmd == "demo":
+            from .offline_demo import render
+            return render(args.output)
         if args.cmd in ("compare", "gate"):
             os.environ["RAL_HOME"] = str(args.state.expanduser().resolve())
             resolve = lambda p: Path(p).resolve() if Path(p).exists() else args.state.resolve() / "results" / p
@@ -362,6 +388,8 @@ def main(argv=None):
         if args.cmd == "init":
             return initialise(args, args.config)
         cfg = _config(args.config)
+        if args.cmd in ("check", "run"):
+            cfg = inline_target(args, cfg)
         state = args.state.expanduser().resolve()
         _environment(cfg, state)
         if args.cmd == "doctor":
