@@ -128,7 +128,8 @@ Markdown and HTML in `.ral/results/<id>/`. A quick pass is a smoke-test result,
 not a security certificate. External telemetry is labelled as target-reported;
 missing telemetry does not silently pass coverage/authority checks.
 
-Status: v0.4.0 beta. The package is `blindsight`; its command is `ral`.
+Status: development toward v0.5.0; the previous release is v0.4.0 beta.
+The package is `blindsight`; its command is `ral`.
 Independent clean-machine testing is pending.
 
 **[Watch the demo (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4)** ·
