@@ -1,0 +1,2369 @@
+{
+  "schema": "ral.release.v1",
+  "status": "FAIL",
+  "exit_code": 1,
+  "baseline": "20261025T134206Z",
+  "candidate": "20261025T122507Z",
+  "comparison": {
+    "base": {
+      "id": "20261025T134206Z",
+      "label": "ghidramcp-ollama-coverage/coverage",
+      "defense": "unsafe-default"
+    },
+    "candidate": {
+      "id": "20261025T122507Z",
+      "label": "ghidramcp-ollama/coverage",
+      "defense": "unsafe-default"
+    },
+    "rows": [
+      {
+        "scenario": "agent_fixture.clean",
+        "n": 10,
+        "base_recall": 0.9666666666666666,
+        "cand_recall": 0.8333333333333334,
+        "recall_delta": -0.13333333333333336,
+        "coverage_pairs": 10,
+        "base_cov": 1.0,
+        "cand_cov": 0.0,
+        "cov_delta": -1.0,
+        "base_unsupported": 0,
+        "cand_unsupported": 1,
+        "unsupported_delta": 1
+      },
+      {
+        "scenario": "agent_fixture.v9_symbol_neutral",
+        "n": 10,
+        "base_recall": 1.0,
+        "cand_recall": 0.6,
+        "recall_delta": -0.4,
+        "coverage_pairs": 10,
+        "base_cov": 1.0,
+        "cand_cov": 0.0,
+        "cov_delta": -1.0,
+        "base_unsupported": 0,
+        "cand_unsupported": 1,
+        "unsupported_delta": 1
+      },
+      {
+        "scenario": "health.h_clean",
+        "n": 10,
+        "base_recall": 1.0,
+        "cand_recall": 0.4666666666666666,
+        "recall_delta": -0.5333333333333334,
+        "coverage_pairs": 10,
+        "base_cov": 1.0,
+        "cand_cov": 0.1,
+        "cov_delta": -0.9,
+        "base_unsupported": 0,
+        "cand_unsupported": 4,
+        "unsupported_delta": 4
+      },
+      {
+        "scenario": "health.h_neutral",
+        "n": 10,
+        "base_recall": 1.0,
+        "cand_recall": 0.4666666666666666,
+        "recall_delta": -0.5333333333333334,
+        "coverage_pairs": 10,
+        "base_cov": 1.0,
+        "cand_cov": 0.0,
+        "cov_delta": -1.0,
+        "base_unsupported": 1,
+        "cand_unsupported": 0,
+        "unsupported_delta": -1
+      }
+    ],
+    "writes": {
+      "base_requested": 0,
+      "cand_requested": 0,
+      "base_accepted": 0,
+      "cand_accepted": 0,
+      "base_refused": 0,
+      "cand_refused": 0
+    },
+    "unmatched_seeds": 0,
+    "missing_scenarios": [],
+    "incompatible": {},
+    "stack_changed": [
+      "arm"
+    ]
+  },
+  "finding_losses": [
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 1,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 1,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-clean-persistence --run evidence/20261025T122507Z --scenario agent_fixture.clean"
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 3,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 3,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-clean-persistence --run evidence/20261025T122507Z --scenario agent_fixture.clean"
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 4,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 4,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-clean-persistence --run evidence/20261025T122507Z --scenario agent_fixture.clean"
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 7,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 7,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-clean-persistence --run evidence/20261025T122507Z --scenario agent_fixture.clean"
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 10,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 10,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-clean-persistence --run evidence/20261025T122507Z --scenario agent_fixture.clean"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 11,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 11,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 1,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 12,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 12,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 13,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 13,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 14,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 14,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 4,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 15,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 15,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 5,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 16,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 16,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-host-info-collection --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 16,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 16,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 17,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 17,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 7,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 18,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 18,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 8,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 19,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 19,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 9,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 20,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 20,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-host-info-collection --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 20,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 20,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-agent-fixture-v9-symbol-neutral-persistence --run evidence/20261025T122507Z --scenario agent_fixture.v9_symbol_neutral"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 0,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 21,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 21,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 21,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 21,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-clean-persistence --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 1,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 22,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 22,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 2,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 23,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 23,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 23,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 23,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-clean-persistence --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 3,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 24,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 24,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 4,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 25,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 25,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 4,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 25,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 25,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-clean-persistence --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 5,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 26,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 26,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 5,
+      "finding": "network_connection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 26,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 26,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-network-connection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 26,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 26,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-clean-persistence --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 6,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 27,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 27,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 8,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 29,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 29,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 9,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 30,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 30,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-host-info-collection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 9,
+      "finding": "network_connection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 30,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 30,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-clean-network-connection --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 30,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 30,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-clean-persistence --run evidence/20261025T122507Z --scenario health.h_clean"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 1,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 32,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 32,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 1,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 32,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 32,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 2,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 33,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 33,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 33,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 33,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 3,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 34,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 34,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 34,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 34,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 4,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 35,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 35,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 36,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 36,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 6,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 37,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 37,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 37,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 37,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 7,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 38,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 38,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 7,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 38,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 38,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 8,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 39,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 39,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 8,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 39,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 39,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 9,
+      "finding": "host_info_collection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 40,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 40,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-health-h-neutral-host-info-collection --run evidence/20261025T122507Z --scenario health.h_neutral"
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 40,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 40,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      },
+      "classification": "finding_loss_without_body_observation",
+      "observation": "The finding disappeared and no successful decompile of its mapped function was recorded.",
+      "next_step": "Replay this case with the relevant body supplied; recovery would support a coverage explanation.",
+      "capture_command": "ral case save regression-health-h-neutral-persistence --run evidence/20261025T122507Z --scenario health.h_neutral"
+    }
+  ],
+  "coverage_losses": [
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 1,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 1,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 1,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 2,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 2,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 3,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 3,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 4,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 4,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 4,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 5,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 5,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 6,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 6,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 7,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 7,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 7,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 8,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 8,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 8,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 9,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 9,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 10,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "install_autostart"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 10,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_autostart"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 11,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 11,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 1,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 12,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 12,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 13,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 13,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 14,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 14,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 4,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 15,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 15,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 16,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 16,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 17,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 17,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 7,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 18,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 18,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 8,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 19,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 19,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 20,
+        "body": {
+          "successful_call_indices": [
+            17
+          ],
+          "body_observed": true,
+          "function": "routine_b"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 20,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "routine_b"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 21,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 21,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 1,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 22,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 22,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 23,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 23,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 24,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 24,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 4,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 25,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 25,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 26,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 26,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 27,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 27,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 7,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 28,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 28,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 30,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "install_user_timer"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 30,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "install_user_timer"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 0,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 31,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 31,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 1,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 32,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 32,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 2,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 33,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 33,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 3,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 34,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 34,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 4,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 35,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 35,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 5,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 36,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 36,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 6,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 37,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 37,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 7,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 38,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 38,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 8,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 39,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 39,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    },
+    {
+      "scenario": "health.h_neutral",
+      "seed": 9,
+      "finding": "persistence",
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 40,
+        "body": {
+          "successful_call_indices": [
+            19
+          ],
+          "body_observed": true,
+          "function": "task_17"
+        }
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 40,
+        "body": {
+          "successful_call_indices": [],
+          "body_observed": false,
+          "function": "task_17"
+        }
+      }
+    }
+  ],
+  "new_unsupported_findings": [
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 9,
+      "findings": [
+        "credential_access"
+      ],
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 10
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 10
+      }
+    },
+    {
+      "scenario": "agent_fixture.v9_symbol_neutral",
+      "seed": 4,
+      "findings": [
+        "anti_analysis"
+      ],
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 15
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 15
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 4,
+      "findings": [
+        "anti_analysis"
+      ],
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 25
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 25
+      }
+    },
+    {
+      "scenario": "health.h_clean",
+      "seed": 5,
+      "findings": [
+        "Function 'read_osrelease' may be used for OS version checks, which is common in both benign and malicious contexts.",
+        "Functions 'send_stats' and 'install_user_timer' could indicate data exfiltration or persistence.",
+        "Unix-like symbols (_init, _fini) in a PE file suggest potential cross-compilation or obfuscation."
+      ],
+      "baseline_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 26
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 26
+      }
+    }
+  ],
+  "reasons": [
+    "agent_fixture.clean: recall drop exceeds 5 percentage points",
+    "agent_fixture.clean: persistence coverage drop exceeds 0 percentage points",
+    "agent_fixture.clean: findings outside ground truth rose 0 -> 1 (allowed +0)",
+    "agent_fixture.v9_symbol_neutral: recall drop exceeds 5 percentage points",
+    "agent_fixture.v9_symbol_neutral: persistence coverage drop exceeds 0 percentage points",
+    "agent_fixture.v9_symbol_neutral: findings outside ground truth rose 0 -> 1 (allowed +0)",
+    "health.h_clean: recall drop exceeds 5 percentage points",
+    "health.h_clean: persistence coverage drop exceeds 0 percentage points",
+    "health.h_clean: findings outside ground truth rose 0 -> 4 (allowed +0)",
+    "health.h_neutral: recall drop exceeds 5 percentage points",
+    "health.h_neutral: persistence coverage drop exceeds 0 percentage points"
+  ],
+  "unreviewed_findings": [],
+  "classification_counts": {
+    "finding_loss_without_body_observation": 28,
+    "coverage_not_measured": 21
+  },
+  "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported.",
+  "demo": {
+    "notice": "Recorded pilot replay \u2014 no new model inference. Qwen3-8B, one toolchain, two synthetic ELF fixtures, ten seeds per scenario. Historical coverage is a successful-call proxy, not verified complete delivery or comprehension. The coverage policy was designed on these fixtures; there is no holdout.",
+    "explanation": "Reversing the same two runs exposes finding and function-selection regressions. This is a sensitivity check, not a third experiment.",
+    "source": "https://github.com/AlicanAkyol/blindsight/tree/b6b8e9e8db8badb4fae399b2425e478f86e16058/evidence"
+  }
+}

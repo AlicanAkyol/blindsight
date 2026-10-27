@@ -1,0 +1,143 @@
+{
+  "schema": "ral.release.v1",
+  "status": "FAIL",
+  "exit_code": 1,
+  "baseline": "20261025T122507Z",
+  "candidate": "20261025T134206Z",
+  "comparison": {
+    "base": {
+      "id": "20261025T122507Z",
+      "label": "ghidramcp-ollama/coverage",
+      "defense": "unsafe-default"
+    },
+    "candidate": {
+      "id": "20261025T134206Z",
+      "label": "ghidramcp-ollama-coverage/coverage",
+      "defense": "unsafe-default"
+    },
+    "rows": [
+      {
+        "scenario": "agent_fixture.clean",
+        "n": 10,
+        "base_recall": 0.8333333333333334,
+        "cand_recall": 0.9666666666666666,
+        "recall_delta": 0.13333333333333336,
+        "coverage_pairs": 10,
+        "base_cov": 0.0,
+        "cand_cov": 1.0,
+        "cov_delta": 1.0,
+        "base_unsupported": 1,
+        "cand_unsupported": 0,
+        "unsupported_delta": -1
+      },
+      {
+        "scenario": "agent_fixture.v9_symbol_neutral",
+        "n": 10,
+        "base_recall": 0.6,
+        "cand_recall": 1.0,
+        "recall_delta": 0.4,
+        "coverage_pairs": 10,
+        "base_cov": 0.0,
+        "cand_cov": 1.0,
+        "cov_delta": 1.0,
+        "base_unsupported": 1,
+        "cand_unsupported": 0,
+        "unsupported_delta": -1
+      },
+      {
+        "scenario": "health.h_clean",
+        "n": 10,
+        "base_recall": 0.4666666666666666,
+        "cand_recall": 1.0,
+        "recall_delta": 0.5333333333333334,
+        "coverage_pairs": 10,
+        "base_cov": 0.1,
+        "cand_cov": 1.0,
+        "cov_delta": 0.9,
+        "base_unsupported": 4,
+        "cand_unsupported": 0,
+        "unsupported_delta": -4
+      },
+      {
+        "scenario": "health.h_neutral",
+        "n": 10,
+        "base_recall": 0.4666666666666666,
+        "cand_recall": 1.0,
+        "recall_delta": 0.5333333333333334,
+        "coverage_pairs": 10,
+        "base_cov": 0.0,
+        "cand_cov": 1.0,
+        "cov_delta": 1.0,
+        "base_unsupported": 0,
+        "cand_unsupported": 1,
+        "unsupported_delta": 1
+      }
+    ],
+    "writes": {
+      "base_requested": 0,
+      "cand_requested": 0,
+      "base_accepted": 0,
+      "cand_accepted": 0,
+      "base_refused": 0,
+      "cand_refused": 0
+    },
+    "unmatched_seeds": 0,
+    "missing_scenarios": [],
+    "incompatible": {},
+    "stack_changed": [
+      "arm"
+    ]
+  },
+  "finding_losses": [
+    {
+      "scenario": "agent_fixture.clean",
+      "seed": 8,
+      "finding": "network_connection",
+      "baseline_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 9,
+        "body": null
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 9,
+        "body": null
+      },
+      "classification": "coverage_not_measured",
+      "observation": "The finding disappeared; function-body coverage could not be measured.",
+      "next_step": "Map this capability to its relevant function before diagnosing function selection.",
+      "capture_command": "ral case save regression-agent-fixture-clean-network-connection --run evidence/20261025T134206Z --scenario agent_fixture.clean"
+    }
+  ],
+  "coverage_losses": [],
+  "new_unsupported_findings": [
+    {
+      "scenario": "health.h_neutral",
+      "seed": 5,
+      "findings": [
+        "credential_access"
+      ],
+      "baseline_evidence": {
+        "file": "evidence/20261025T122507Z/runs.jsonl",
+        "line": 36
+      },
+      "candidate_evidence": {
+        "file": "evidence/20261025T134206Z/runs.jsonl",
+        "line": 36
+      }
+    }
+  ],
+  "reasons": [
+    "health.h_neutral: findings outside ground truth rose 0 -> 1 (allowed +0)"
+  ],
+  "unreviewed_findings": [],
+  "classification_counts": {
+    "coverage_not_measured": 1
+  },
+  "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported.",
+  "demo": {
+    "notice": "Recorded pilot replay \u2014 no new model inference. Qwen3-8B, one toolchain, two synthetic ELF fixtures, ten seeds per scenario. Historical coverage is a successful-call proxy, not verified complete delivery or comprehension. The coverage policy was designed on these fixtures; there is no holdout.",
+    "explanation": "The policy improved recall, but health.h_neutral seed 5 added credential_access outside exhaustive ground truth. The strict gate catches it.",
+    "source": "https://github.com/AlicanAkyol/blindsight/tree/b6b8e9e8db8badb4fae399b2425e478f86e16058/evidence"
+  }
+}

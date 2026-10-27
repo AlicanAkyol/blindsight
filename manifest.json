@@ -1,0 +1,24 @@
+{
+  "kind": "recorded_pilot_replay",
+  "notice": "Recorded pilot replay \u2014 no new model inference. Qwen3-8B, one toolchain, two synthetic ELF fixtures, ten seeds per scenario. Historical coverage is a successful-call proxy, not verified complete delivery or comprehension. The coverage policy was designed on these fixtures; there is no holdout.",
+  "sha256": {
+    "20261025T122507Z/meta.json": "f8ee2045d463535a07ade25d0566e7cb2e1811f49e84fbc47c0b50de5f26d44a",
+    "20261025T122507Z/runs.jsonl": "043f82b268c969d03faaf1019cfdffefe18f64a31b4e106ee29648134a265a65",
+    "20261025T134206Z/meta.json": "3fb0e7ba232da9ff5d0eb9f77aebb8ce8788d4b64aacd8dd59ff9baf9e282843",
+    "20261025T134206Z/runs.jsonl": "dae794101cd8fda0b0913121dc7c8b202fece625d3c9ce64809357b457802928"
+  },
+  "results": {
+    "unchanged": {
+      "status": "PASS",
+      "gate_exit_code": 0
+    },
+    "policy-change": {
+      "status": "FAIL",
+      "gate_exit_code": 1
+    },
+    "coverage-loss": {
+      "status": "FAIL",
+      "gate_exit_code": 1
+    }
+  }
+}

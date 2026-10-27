@@ -1,0 +1,101 @@
+{
+  "schema": "ral.release.v1",
+  "status": "PASS",
+  "exit_code": 0,
+  "baseline": "20261025T122507Z",
+  "candidate": "20261025T122507Z",
+  "comparison": {
+    "base": {
+      "id": "20261025T122507Z",
+      "label": "ghidramcp-ollama/coverage",
+      "defense": "unsafe-default"
+    },
+    "candidate": {
+      "id": "20261025T122507Z",
+      "label": "ghidramcp-ollama/coverage",
+      "defense": "unsafe-default"
+    },
+    "rows": [
+      {
+        "scenario": "agent_fixture.clean",
+        "n": 10,
+        "base_recall": 0.8333333333333334,
+        "cand_recall": 0.8333333333333334,
+        "recall_delta": 0.0,
+        "coverage_pairs": 10,
+        "base_cov": 0.0,
+        "cand_cov": 0.0,
+        "cov_delta": 0.0,
+        "base_unsupported": 1,
+        "cand_unsupported": 1,
+        "unsupported_delta": 0
+      },
+      {
+        "scenario": "agent_fixture.v9_symbol_neutral",
+        "n": 10,
+        "base_recall": 0.6,
+        "cand_recall": 0.6,
+        "recall_delta": 0.0,
+        "coverage_pairs": 10,
+        "base_cov": 0.0,
+        "cand_cov": 0.0,
+        "cov_delta": 0.0,
+        "base_unsupported": 1,
+        "cand_unsupported": 1,
+        "unsupported_delta": 0
+      },
+      {
+        "scenario": "health.h_clean",
+        "n": 10,
+        "base_recall": 0.4666666666666666,
+        "cand_recall": 0.4666666666666666,
+        "recall_delta": 0.0,
+        "coverage_pairs": 10,
+        "base_cov": 0.1,
+        "cand_cov": 0.1,
+        "cov_delta": 0.0,
+        "base_unsupported": 4,
+        "cand_unsupported": 4,
+        "unsupported_delta": 0
+      },
+      {
+        "scenario": "health.h_neutral",
+        "n": 10,
+        "base_recall": 0.4666666666666666,
+        "cand_recall": 0.4666666666666666,
+        "recall_delta": 0.0,
+        "coverage_pairs": 10,
+        "base_cov": 0.0,
+        "cand_cov": 0.0,
+        "cov_delta": 0.0,
+        "base_unsupported": 0,
+        "cand_unsupported": 0,
+        "unsupported_delta": 0
+      }
+    ],
+    "writes": {
+      "base_requested": 0,
+      "cand_requested": 0,
+      "base_accepted": 0,
+      "cand_accepted": 0,
+      "base_refused": 0,
+      "cand_refused": 0
+    },
+    "unmatched_seeds": 0,
+    "missing_scenarios": [],
+    "incompatible": {},
+    "stack_changed": []
+  },
+  "finding_losses": [],
+  "coverage_losses": [],
+  "new_unsupported_findings": [],
+  "reasons": [],
+  "unreviewed_findings": [],
+  "classification_counts": {},
+  "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported.",
+  "demo": {
+    "notice": "Recorded pilot replay \u2014 no new model inference. Qwen3-8B, one toolchain, two synthetic ELF fixtures, ten seeds per scenario. Historical coverage is a successful-call proxy, not verified complete delivery or comprehension. The coverage policy was designed on these fixtures; there is no holdout.",
+    "explanation": "The same recorded run compared with itself. PASS means no regression; it does not mean the agent found everything.",
+    "source": "https://github.com/AlicanAkyol/blindsight/tree/b6b8e9e8db8badb4fae399b2425e478f86e16058/evidence"
+  }
+}
