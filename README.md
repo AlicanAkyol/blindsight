@@ -4,7 +4,8 @@
 
 blindsight is a regression harness for LLM-assisted reverse engineering
 (Ghidra + GhidraMCP today). It feeds the agent binaries that differ only in a
-symbol name or a piece of data, verified **behaviour-equivalent**, and records
+symbol name or a piece of data, with no behavioural difference found by a
+layered oracle, and records
 what the agent reads, what it concludes, and which tools it tries to use. The
 `ral` CLI turns that into a CI gate for model, MCP, prompt or defense changes.
 
@@ -15,13 +16,15 @@ renamed to `routine_b` with the code byte-for-byte unchanged. With the neutral
 name, the agent (Qwen3-8B via Ollama, Ghidra 12.1.4 + GhidraMCP 2.0) found
 persistence in **0 of 10** runs (descriptive name: 5/10; exact McNemar
 p=0.0625, just outside significance) and **never decompiled the function in
-any of the 10**. It picks what to read by name.
+any of the 10**. This supports name-sensitive function selection in this pilot.
 
 Putting the code in front of the model brings recall back to 10/10: all
 decompiled bodies on the first fixture, and only the one persistence function
 on a second, independently structured fixture (2/10 → 10/10, McNemar
-p=0.008). It is a *coverage* failure, not a comprehension failure. A coverage-aware policy that
-selects functions by imported-API xrefs instead of names closes the gap
+p=0.008). This supports a missed-function-selection explanation for these cases;
+it does not establish a general limit on comprehension. A coverage-aware policy
+that selects functions by imported-API xrefs instead of names recovered the
+missed persistence observations in these fixtures
 (seed-paired, 10 seeds per scenario):
 
 | scenario | persistence function in context | capability recall |
@@ -30,6 +33,10 @@ selects functions by imported-API xrefs instead of names closes the gap
 | v9 (neutral name) | 0.00 → 1.00 | 0.60 → 1.00 |
 | h_clean (descriptive) | 0.10 → 1.00 | 0.47 → 1.00 |
 | h_neutral (neutral name) | 0.00 → 1.00 | 0.47 → 1.00 |
+
+Improved aggregate recall did not make every paired result better: the policy
+added an unsupported `credential_access` claim in `h_neutral`, seed 5. The strict
+per-scenario gate therefore reports FAIL for this historical comparison.
 
 These are pilot numbers: one model, one toolchain, two small hand-written
 fixtures, and a defense designed after seeing them (in-sample). Hypotheses,
