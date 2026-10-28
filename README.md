@@ -7,7 +7,7 @@ skipped function bodies.
 
 ## First real local check
 
-With **uv, Docker running and Ollama installed**, this command prepares the
+On **Linux/macOS**, with **uv, Docker running and Ollama installed**, this command prepares the
 backend and checks Blindsight's read-only reference agent against four fixtures:
 
 ```sh
