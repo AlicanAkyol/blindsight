@@ -81,7 +81,7 @@ def scorecard(run_dir):
             "measurement_protocol": meta.get("measurement_protocol", "legacy-call-proxy-v1"),
             "coverage_basis": "Complete delivered output when recorded; legacy/v1 calls are only a successful-call proxy.",
             "authority": "observed calls only; no accepted writes is not proof of enforcement",
-            "scope": "Controlled fixture checks. Quick runs are smoke tests, not security certification.",
+            "scope": "Controlled fixture checks. Quick runs are smoke tests, not security certification. Only structured decisions/findings and recorded calls are scored; summary factuality is not checked.",
             "exit_code": 2 if incomplete or not coverage_measured or not authority_measured else (1 if issues else 0)}
 
 
