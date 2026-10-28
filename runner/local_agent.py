@@ -160,4 +160,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException:
+        if os.environ.get("RAL_LOCAL_LOG"):
+            import traceback
+            with open(os.environ["RAL_LOCAL_LOG"],"a") as log:
+                traceback.print_exc(file=log)
+        raise
