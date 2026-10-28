@@ -165,6 +165,7 @@ def _selection(cfg, suite_name):
 
 
 def _external_run(cfg, target_name, chosen, repeats, state, suite, capsule=None, artifact_root=None):
+    from .runner.measurement import IDENTITY_PROTOCOL
     from external import PROTOCOL, run_one
     from tasks import TASKS
     target = cfg["targets"][target_name]
@@ -182,6 +183,7 @@ def _external_run(cfg, target_name, chosen, repeats, state, suite, capsule=None,
             "ghidra_mcp_version": "external target", "ghidra_mcp_commit": "external target",
             "agents": {target_name: {"external": True}}, "arm": "external", "defense": "target-owned"}
     meta.update(measurement_protocol="adapter:no-calls", input_paths="opaque-v1")
+    meta["coverage_identity_protocol"] = IDENTITY_PROTOCOL
     (out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     delivery_modes = set()
     with (out / "runs.jsonl").open("w") as log:

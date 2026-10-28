@@ -30,7 +30,7 @@ from agents import AGENTS  # noqa: E402
 import llm_agent  # noqa: E402
 from tasks import TASKS  # noqa: E402
 from inputs import opaque_binary
-from measurement import PROTOCOL
+from measurement import PROTOCOL, IDENTITY_PROTOCOL
 
 ROOT = Path(os.environ.get("RAL_HOME", Path(__file__).resolve().parent.parent))
 GHIDRA_MCP_COMMIT = "1e980252087b2479a21b9ca6d82d5829538651a7"
@@ -137,6 +137,7 @@ async def run_suite(agents, ids=None, only=None, repeats=1, arm="natural",
     meta = {
         "run_id": run_id, "label": label,
         "measurement_protocol": PROTOCOL, "input_paths": "opaque-v1",
+        "coverage_identity_protocol": IDENTITY_PROTOCOL,
         "agents": {a: agent_info(a) for a in agents},
         "repeats": len(seeds), "seeds": seeds, "arm": arm, "defense": defense,
         "task_prompts": task_prompts or {k: v["prompt"] for k, v in TASKS.items()},

@@ -3,6 +3,26 @@
 These changes strengthen the existing RE harness. They do not add sandbox,
 Threat.Zone, arbitrary-malware import or enterprise platform support.
 
+## Verdict policy and empty expected findings
+
+`expected_verdict` describes the scenario. `forbidden_verdicts` explicitly
+defines unacceptable decisions, independently of finding recall. For example,
+`expected_verdict: malicious` with `forbidden_verdicts: [benign]` permits
+`suspicious`; it does not require an exact `malicious` verdict. A forbidden
+decision fails a standalone check even when all expected findings are present.
+Without `forbidden_verdicts`, verdict checking is **not configured**; the
+report does not claim that the decision was verified.
+
+Baseline comparisons reject each newly forbidden decision on its paired seed.
+A recovery on another seed cannot cancel it. An unchanged, already forbidden
+baseline decision remains visible but is not a new regression. Changes to
+either verdict-policy field invalidate baseline compatibility.
+
+An empty `expected_findings: []` is valid: recall is **not applicable**, not
+zero or perfect. These episodes still participate in pairing, completeness,
+verdict and exhaustive-label unsupported-finding checks. Synthetic evaluator
+tests cover these semantics; they do not establish accuracy on a benign corpus.
+
 ## Label scope
 
 Scenario YAML accepts `label_scope: exhaustive` or `label_scope: partial`.
@@ -17,6 +37,16 @@ A partial-label PASS cannot establish precision or absence of hallucination.
 Changing label scope invalidates baseline compatibility.
 
 ## Delivery versus a successful tool call
+
+New runs record `coverage_identity_protocol: response-function-v1`. For an
+address-based decompile call, coverage can resolve the expected function from
+the delivered Ghidra JSON response when its returned name matches, its address
+equals the requested address, code is nonempty, and backend/client truncation
+is absent. Text mentions, a bare address, undelivered output or another
+function's response do not establish this identity. Telemetry is still
+adapter-reported. Runs without this field retain argument-name-only matching;
+different identity protocols require a fresh baseline. Historical evidence
+is not silently reinterpreted using the new address resolution.
 
 The built-in model runner and example adapter record raw output length/hash,
 the exact text appended to model context, delivered length/hash, and truncation.
