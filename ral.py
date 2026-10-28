@@ -214,7 +214,8 @@ def _compatibility(bmeta, cmeta):
     # model / prompt / defense are the subject of comparison, not a blocker
     def stack(m):
         return {"agents": m.get("agents"), "defense": m.get("defense"), "arm": m.get("arm"),
-                "task_prompts": m.get("task_prompts"), "ghidra_mcp_commit": m.get("ghidra_mcp_commit")}
+                "task_prompts": m.get("task_prompts"), "ghidra_mcp_commit": m.get("ghidra_mcp_commit"),
+                "runtime_backend": m.get("runtime_backend")}
     changed = [k for k, v in stack(bmeta).items() if v != stack(cmeta).get(k)]
     return incompatible, changed
 

@@ -3,6 +3,22 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  container-backend:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: python -m pip install '.[local]'
+      - run: python tests/backend_smoke.py /tmp/ral-backend-smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-backend-smoke
+          path: /tmp/ral-backend-smoke
   installed:
     strategy:
       matrix:
@@ -39,6 +55,8 @@ jobs:
           /tmp/ral-test/bin/python tests/test_external.py
           /tmp/ral-test/bin/python tests/test_verdict_policy.py
           /tmp/ral-test/bin/python tests/test_address_coverage.py
+          /tmp/ral-test/bin/python tests/test_local_workflow.py
+          /tmp/ral-test/bin/python tests/test_runtime_assets.py
       - name: Published numbers reproduce from evidence logs
         run: |
           /tmp/ral-test/bin/python evidence/recompute.py

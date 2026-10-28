@@ -1,6 +1,31 @@
-# blindsight
+# Blindsight
 
-**Rename one function and your AI reverse-engineering agent may never read it.**
+Check what your AI reverse-engineering agent stops finding after a model or
+analysis-policy change. Run controlled ELF fixtures, save a baseline, and
+inspect per-seed evidence for missed capabilities, unsupported findings and
+skipped function bodies.
+
+## First real local check
+
+With **uv, Docker running and Ollama installed**, this command prepares the
+backend and checks Blindsight's read-only reference agent against four fixtures:
+
+```sh
+uvx --from 'blindsight[local] @ git+https://github.com/AlicanAkyol/blindsight' ral local
+```
+
+No adapter, YAML, host Java, Ghidra install, native build or JAR path is needed.
+First use downloads a cached backend and, if missing, several GB of local model
+weights. Later runs reuse them. The model stays on local Ollama. The printed
+HTML report shows what was measured; a missed finding is an evaluation result,
+not a failed installation. [Setup, baseline and limits](docs/local.md).
+
+This path evaluates the **reference agent**, not your existing custom loop.
+To check your own agent, use the target adapter path below. Structured fields
+and recorded calls are scored; free-text summary factuality is not checked.
+
+**Rename one function and an agent may never read it:** the research behind
+the fixture cases is described below.
 
 blindsight is a regression harness for LLM-assisted reverse engineering
 (Ghidra + GhidraMCP today). It feeds the agent binaries that differ only in a
@@ -50,7 +75,7 @@ Their coverage numbers are historical successful-call proxies, not measurements
 from the corrected protocol. No old result is relabelled as a fresh experiment.
 See [measurement changes](docs/measurement.md).
 
-## Quick start
+## Recorded demo and custom-agent path
 
 **[Open the recorded browser demo — no install](https://alicanakyol.github.io/blindsight/).**
 It shows real historical records, not a live model run.

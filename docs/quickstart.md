@@ -7,6 +7,11 @@ its results. Start with `quick`, then save a baseline before changing your agent
 
 ## One command with your existing agent
 
+For the packaged reference agent with local Ollama, start with
+[`ral local`](local.md): no adapter/YAML or host Java/Ghidra is required.
+The path below is for an **existing custom agent** that already implements
+the target protocol; a generic agent executable is not enough.
+
 With Python 3.10–3.13 and uv installed, an existing `ral.target.v1` adapter can
 be checked directly:
 

@@ -30,11 +30,15 @@ SUITES = {
 }
 
 
+def default_config():
+    cfg = yaml.safe_load((ASSETS / "ral.yaml").read_text())
+    cfg.update({"default_profile": "ghidramcp-ollama", "tools": {}, "targets": {}})
+    return cfg
+
+
 def _config(path):
     if not path.exists():
-        cfg = yaml.safe_load((ASSETS / "ral.yaml").read_text())
-        cfg.update({"default_profile": "ghidramcp-ollama", "tools": {}, "targets": {}})
-        return cfg
+        return default_config()
     cfg = yaml.safe_load(path.read_text())
     if not isinstance(cfg, dict):
         raise ValueError("configuration must be a YAML object")
@@ -183,15 +187,23 @@ def _external_run(cfg, target_name, chosen, repeats, state, suite, capsule=None,
             "ghidra_mcp_version": "external target", "ghidra_mcp_commit": "external target",
             "agents": {target_name: {"external": True}}, "arm": "external", "defense": "target-owned"}
     meta.update(measurement_protocol="adapter:no-calls", input_paths="opaque-v1")
+    meta["input_paths"] = target.get("input_paths", "opaque-v1")
+    if target.get("model_info"):
+        meta["agents"][target_name]["model"] = target["model_info"]
+    if target.get("runtime_info"):
+        meta["runtime_backend"] = target["runtime_info"]
     meta["coverage_identity_protocol"] = IDENTITY_PROTOCOL
     (out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     delivery_modes = set()
+    completed = 0
     with (out / "runs.jsonl").open("w") as log:
         for sc in chosen:
             for seed in seeds:
-                print(f"Checking {sc['id']} seed {seed}...", file=sys.stderr, flush=True)
+                completed += 1
+                print(f"[{completed}/{len(chosen)*len(seeds)}] {sc['id']} seed={seed}", file=sys.stderr, flush=True)
                 root = Path(artifact_root or state)
                 r = run_one(target, sc, root / "build" / sc["variant"] / sc["sample"], seed, prompt=prompts[sc["task"]])
+                print(f"  {'ERROR' if r.get('error') else 'completed'} in {r['seconds']:.1f}s", file=sys.stderr, flush=True)
                 r["agent"] = target_name
                 for call in r.get("calls", []):
                     delivery_modes.add("complete-output-v2" if "delivery_recorded" in call else "call-proxy-v1")
@@ -333,6 +345,17 @@ def main(argv=None):
     demo = sub.add_parser("demo", help="replay published pilot evidence offline; no model or Ghidra")
     demo.add_argument("--output", type=Path, default=Path("blindsight-demo"),
                       help="new output directory (never overwrites existing files)")
+    local = sub.add_parser("local", help="check the read-only reference agent with local Ollama and a prepared Docker backend; no YAML/adapter")
+    local.add_argument("--model", default="qwen3:8b", help="local tool-capable Ollama model (default: qwen3:8b)")
+    local.add_argument("--prepare-only", action="store_true", help="prepare and verify the runtime without model inference")
+    local.add_argument("--suite", default="quick", choices=["quick","ci","full"])
+    local.add_argument("--case")
+    local.add_argument("--target-timeout", type=float, default=600, help="deadline in seconds per episode")
+    local.add_argument("--baseline", help="saved, or a compatible local run directory")
+    local.add_argument("--max-recall-drop", type=float, default=5)
+    local.add_argument("--max-coverage-drop", type=float, default=0)
+    local.add_argument("--max-unsupported-increase", type=int, default=0)
+    local.add_argument("--json", type=Path); local.add_argument("--markdown", type=Path); local.add_argument("--html", type=Path)
     init = sub.add_parser("init", help="discover local tools and create a portable project config")
     init.add_argument("--target-command", help="argv command for your own agent; no shell is used")
     doc = sub.add_parser("doctor", help="diagnose the chosen stack with actionable setup instructions")
@@ -381,6 +404,9 @@ def main(argv=None):
         if args.cmd == "demo":
             from .offline_demo import render
             return render(args.output)
+        if args.cmd == "local":
+            from .local_workflow import run
+            return run(args, args.state.expanduser().resolve())
         if args.cmd in ("compare", "gate"):
             os.environ["RAL_HOME"] = str(args.state.expanduser().resolve())
             resolve = lambda p: Path(p).resolve() if Path(p).exists() else args.state.resolve() / "results" / p
