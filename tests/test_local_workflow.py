@@ -33,7 +33,7 @@ class LocalWorkflowTests(unittest.TestCase):
             return {"tags":{"models":[{"name":"qwen3:8b","digest":"verified","size":2*1024*1024}]},
                     "show":{"capabilities":["tools"],"parameters":"test"},
                     "version":{"version":"test"}}[path]
-        with patch.object(local.importlib.metadata,"version",return_value="test"),patch.object(local,"api",side_effect=api),patch.object(local.urllib.request,"urlopen") as request:
+        with patch.object(local.importlib.metadata,"version",return_value="test"),patch.object(local,"api",side_effect=api),patch.object(local,"open_local") as request:
             result=local.prepare_model("qwen3:8b")
             self.assertEqual(result["digest"],"verified"); request.assert_not_called()
 
@@ -46,7 +46,7 @@ class LocalWorkflowTests(unittest.TestCase):
                     return {"models":[] if calls.count("tags")==1 else [{"name":"test:1","size":2000000}]}
                 return {"capabilities":["tools"]} if path=="show" else {"version":"test"}
             stream=io.BytesIO(json.dumps({"error":"download failed"} if failed else {"status":"success"}).encode()+b"\n")
-            with patch.object(local,"api",side_effect=api),patch.object(local.urllib.request,"urlopen",return_value=stream) as request,patch.object(local.importlib.metadata,"version",return_value="test"):
+            with patch.object(local,"api",side_effect=api),patch.object(local,"open_local",return_value=stream) as request,patch.object(local.importlib.metadata,"version",return_value="test"):
                 if failed:
                     with self.assertRaises(ValueError): local.prepare_model("test:1")
                 else:

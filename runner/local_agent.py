@@ -30,7 +30,7 @@ def chat(messages, tools, seed):
     headers = {"Content-Type": "application/json"}
     body = {"model": MODEL, "messages": messages, "tools": tools, "seed": seed, "temperature": 0.6}
     req = urllib.request.Request(BASE_URL + "/chat/completions", json.dumps(body).encode(), headers)
-    with urllib.request.urlopen(req, timeout=900) as r:
+    with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=900) as r:
         return json.loads(r.read())["choices"][0]["message"]
 
 

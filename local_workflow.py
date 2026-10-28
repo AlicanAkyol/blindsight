@@ -23,10 +23,14 @@ ASSETS=Path(__file__).resolve().parent
 RECIPES=["Dockerfile.local","local-assets.py","local-requirements.txt","local-entry.py"]
 URL="http://127.0.0.1:11434"
 
+def open_local(request,timeout):
+    # A local-model request must not be routed through HTTP_PROXY.
+    return urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request,timeout=timeout)
+
 def api(path,data=None,timeout=10):
     req=urllib.request.Request(URL+"/api/"+path,None if data is None else json.dumps(data).encode(),
                                {"Content-Type":"application/json"})
-    with urllib.request.urlopen(req,timeout=timeout) as response:
+    with open_local(req,timeout) as response:
         return json.load(response)
 
 def model_name(value):
@@ -63,8 +67,9 @@ def public_docker():
     with tempfile.TemporaryDirectory(prefix="ral-public-docker-") as tmp:
         dirs=[Path.home()/".docker/cli-plugins",Path(executable).resolve().parent.parent/"cli-plugins"]
         (Path(tmp)/"config.json").write_text(json.dumps({"cliPluginsExtraDirs":[str(p) for p in dirs if p.is_dir()]}))
-        env={**original,"DOCKER_CONFIG":tmp,"DOCKER_HOST":endpoint}
-        env.pop("DOCKER_CONTEXT",None)
+        env={**original,"DOCKER_CONFIG":tmp,"DOCKER_HOST":endpoint,"DOCKER_BUILDKIT":"1"}
+        for key in ["DOCKER_CONTEXT","BUILDX_BUILDER","BUILDKIT_HOST"]:
+            env.pop(key,None)
         docker_call(["info","--format","{{.ServerVersion}}"],env)
         yield env
 
@@ -152,7 +157,7 @@ def prepare_model(name):
         req=urllib.request.Request(URL+"/api/pull",json.dumps({"model":name,"stream":True}).encode(),
                                   {"Content-Type":"application/json"})
         last=None
-        with urllib.request.urlopen(req,timeout=900) as response:
+        with open_local(req,900) as response:
             for line in response:
                 item=json.loads(line)
                 if item.get("error"):
