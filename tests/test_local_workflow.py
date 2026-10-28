@@ -1,6 +1,7 @@
 """First-use orchestration contracts; mocks are not real model acceptance data."""
 import argparse
 from contextlib import nullcontext
+from contextlib import redirect_stdout
 import importlib.util
 import io
 import json
@@ -138,5 +139,24 @@ class LocalWorkflowTests(unittest.TestCase):
                 self.assertEqual(target["input_paths"],"container-fixed-v1")
                 self.assertEqual(target["model_info"]["digest"],"model-test")
                 self.assertEqual(target["command"][-1],"blindsight.runner.local_agent")
+
+    def test_local_baseline_outputs_comparison_not_candidate_scorecard(self):
+        # Simulated target solely checks the real installed product workflow.
+        original_check=product.check
+        adapter=Path(__file__).with_name("sim_target.py").resolve()
+        def check(args,cfg,state):
+            cfg["targets"][args.target]["command"]=[os.sys.executable,str(adapter)]
+            return original_check(args,cfg,state)
+        with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{},clear=False),redirect_stdout(io.StringIO()):
+            state=Path(tmp)/"state"
+            env={"DOCKER_CONFIG":tmp,"DOCKER_HOST":"unix:///tmp/docker.sock"}
+            with patch.object(local.importlib.util,"find_spec",return_value=True),patch.object(local,"public_docker",side_effect=lambda:nullcontext(env)),patch.object(local,"ollama_service",side_effect=lambda state:nullcontext()),patch.object(local,"prepare_model",return_value={"name":"qwen3:8b","digest":"test"}),patch.object(local,"prepare_backend",return_value={"image_id":"sha256:"+"a"*64}),patch("blindsight.runner.local_agent.probe",new_callable=AsyncMock,return_value={"decompile_main":True}),patch.object(local,"docker_call",return_value=subprocess.CompletedProcess([],0,"","")),patch.object(product,"check",side_effect=check):
+                self.assertEqual(product.main(["--state",str(state),"local"]),0)
+                self.assertEqual(product.main(["--state",str(state),"baseline","save"]),0)
+                output=Path(tmp)/"comparison.json"
+                self.assertEqual(product.main(["--state",str(state),"local","--baseline","saved","--json",str(output)]),0)
+                self.assertEqual(json.loads(output.read_text())["schema"],"ral.release.v1")
+                run=Path(json.loads((state/"latest.json").read_text())["run_dir"])
+                self.assertEqual(json.loads((run/"check.json").read_text())["schema"],"ral.scorecard.v1")
 
 if __name__=="__main__": unittest.main()

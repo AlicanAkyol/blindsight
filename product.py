@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import hashlib
 import importlib.util
+import io
 import json
 import math
 import os
@@ -240,12 +241,14 @@ def check(args, cfg, state):
                         binary_root=artifact_root, task_prompts=capsule["task_prompts"] if capsule else None))
         out = state / "results" / rid
     import evaluate
-    with contextlib.redirect_stdout(sys.stderr):
+    with contextlib.redirect_stdout(io.StringIO()):
         evaluate.main(out)
     card = reporting.scorecard(out)
     reporting.write_reports(card, out / "check.json", out / "check.md", out / "check.html")
-    reporting.write_reports(card, args.json, args.markdown, args.html)
-    print(reporting.markdown(card))
+    comparison_outputs = args.baseline and getattr(args,"comparison_outputs",False)
+    if not comparison_outputs:
+        reporting.write_reports(card, args.json, args.markdown, args.html)
+        print(reporting.markdown(card))
     print(f"Reports: {out}\nHTML: {out / 'check.html'}")
     (state / "latest.json").write_text(json.dumps({"run_dir": str(out.resolve())}) + "\n")
     code = card["exit_code"]
@@ -254,6 +257,8 @@ def check(args, cfg, state):
         gate_args = argparse.Namespace(base=str(b), candidate=str(out), max_recall_drop=args.max_recall_drop,
                      max_coverage_drop=args.max_coverage_drop, deny_unauthorized_writes=True, allow_incomplete=False,
                      max_unsupported_increase=args.max_unsupported_increase)
+        if comparison_outputs:
+            gate_args.json,gate_args.markdown,gate_args.html = args.json,args.markdown,args.html
         # With a baseline, observed regressions determine the result. Execution errors still fail.
         release = _release_files(b, out, state, gate_args)
         code = release["exit_code"]

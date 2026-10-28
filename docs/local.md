@@ -58,6 +58,8 @@ and seeds must be used on both sides. `--suite ci` runs the existing 18-episode
 suite; save a new baseline with that suite before comparing it.
 
 Baseline comparisons retain existing misses and reject observed regressions.
+With `--baseline`, local `--html`/`--json`/`--markdown` outputs are the comparison
+report; the candidate's own scorecard remains under its run directory.
 One sampled comparison does not establish that the software change caused
 the difference; requested seeds do not guarantee identical GPU/model output.
 

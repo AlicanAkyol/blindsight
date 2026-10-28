@@ -6,6 +6,17 @@ PROTOCOL = "delivered-output-v2"
 IDENTITY_PROTOCOL = "response-function-v1"
 
 
+def model_identities(meta):
+    models=[]
+    for agent in meta.get("agents",{}).values():
+        model=agent.get("model")
+        if isinstance(model,str):
+            models.append({"name":model,"digest":agent.get("digest")})
+        elif isinstance(model,dict) and (model.get("name") or model.get("model")):
+            models.append({"name":model.get("name") or model["model"],"digest":model.get("digest")})
+    return models
+
+
 def verdict_policy(scenario):
     """Explicit forbidden decisions; expected_verdict alone is descriptive."""
     choices = {"malicious", "suspicious", "benign"}

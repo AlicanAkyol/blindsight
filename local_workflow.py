@@ -245,10 +245,13 @@ def run(args,state):
                     "timeout":args.target_timeout,"env":values,"model_info":model,"runtime_info":runtime,
                     "input_paths":"container-fixed-v1"}}
                 args.target=name; args.profile=None
+                args.comparison_outputs=True
                 product._environment(cfg,state)
                 code=product.check(args,cfg,state)
                 if code==1:
-                    print("Setup succeeded; measured fixture issues are shown above (exit 1).",flush=True)
+                    print("Setup succeeded; measured fixture issues/regressions are shown above (exit 1).",flush=True)
+                if code==0 and args.baseline:
+                    print("No observed regression against the baseline; existing misses may remain.",flush=True)
                 if code in (0,1):
                     print("Next: ral baseline save\nAfter a model change: ral local --model MODEL --baseline saved",flush=True)
                 if code==2:

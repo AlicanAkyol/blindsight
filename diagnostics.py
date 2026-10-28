@@ -143,9 +143,18 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
             "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported. Only structured decisions/findings and recorded calls are scored; summary factuality is not checked."}
 
 
+def model_summary(report):
+    sides=[report["comparison"].get(key,{}) for key in ["base","candidate"]]
+    if not any(s.get("models") for s in sides): return ""
+    def label(side):
+        return ", ".join(f"{m['name']} ({(m.get('digest') or 'unknown')[:12]})" for m in side.get("models",[])) or "not recorded"
+    return "Models: "+label(sides[0])+" → "+label(sides[1])
+
+
 def markdown(report):
     lines = [f"# RAL release check — {report['status']}", "",
              f"Baseline: `{report['baseline']}` · Candidate: `{report['candidate']}`", ""]
+    if model_summary(report): lines += [model_summary(report),""]
     lines += [f"- {r}" for r in report["reasons"]] or ["No regression exceeded the configured thresholds."]
     lines += ["", "## Verdict regressions", ""]
     for event in report.get("verdict_regressions", []):
@@ -247,7 +256,7 @@ def html_report(report):
             "code{overflow-wrap:anywhere;white-space:normal;font-size:12px}details section{border-top:1px solid #dce6e1;margin-top:16px}"
             "</style></head><body><main><header><span class='status'>" + esc(report["status"]) + "</span>"
             "<h1>What changed in your RE agent?</h1><p class='meta'>Baseline " + esc(report["baseline"]) +
-            "<br>Candidate " + esc(report["candidate"]) + "</p><ul>" + reasons + "</ul></header>"
+            "<br>Candidate " + esc(report["candidate"]) + "</p><p>" + esc(model_summary(report)) + "</p><ul>" + reasons + "</ul></header>"
             "<section class='overview'><h2>Paired results</h2><div class='scroll'><table><thead><tr>"
             "<th>Scenario</th><th>Valid pairs</th><th>Capability recall</th><th>Persistence body coverage</th><th>Findings outside ground truth</th><th>Forbidden verdict runs</th>"
             "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></section><h2>What to inspect next</h2>" +
