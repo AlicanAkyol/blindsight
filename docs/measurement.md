@@ -25,6 +25,12 @@ tests cover these semantics; they do not establish accuracy on a benign corpus.
 
 ## Label scope
 
+Unsupported findings refer to the structured finding list. The evaluator does
+not extract claims from free-text summaries or verify their factual accuracy.
+Correct structured fields can coexist with wrong endpoint/algorithm details
+or an unsupported behavior claim in the summary. A passing scorecard or gate
+therefore does not approve the entire analysis report.
+
 Scenario YAML accepts `label_scope: exhaustive` or `label_scope: partial`.
 Both bundled fixture suites are explicitly exhaustive, based on source review.
 Missing scope retains historical exhaustive semantics for old snapshots; new

@@ -140,7 +140,7 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
             "unreviewed_findings": unreviewed,
             "verdict_regressions": verdict_regressions,
             "classification_counts": dict(Counter(e["classification"] for e in events)),
-            "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported."}
+            "caveat": "Complete delivered output is required when delivery is recorded; legacy/v1 calls are a call proxy. Partial-label extras are not classified as false. Observations do not prove comprehension or causality. External calls are target-reported. Only structured decisions/findings and recorded calls are scored; summary factuality is not checked."}
 
 
 def markdown(report):

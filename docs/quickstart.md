@@ -176,6 +176,12 @@ candidate reports more of them than the seed-paired baseline, the gate fails
 (`--max-unsupported-increase N` allows a rise of N per scenario; default 0). A passing result describes these tests, not a security
 certificate or proof that a write boundary exists.
 
+The evaluator scores structured verdict/findings and recorded tool calls.
+Free-text summary factuality is not checked. For example, a correct network
+finding can accompany a wrong port number, or an unsupported anti-analysis
+claim can appear only in the summary. These statements do not become verified
+because the structured checks pass; inspect the summary separately.
+
 ## Fixture validation
 
 ```sh
