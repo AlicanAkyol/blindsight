@@ -312,7 +312,9 @@ def case_command(args, state):
         return 0
     run = Path(args.run).resolve() if args.run else Path(json.loads((state / "latest.json").read_text())["run_dir"])
     dest = cases.save(state, args.name, run, args.scenario, ASSETS)
-    print(f"Captured case: {dest}\nReplay: ral check --case {args.name}")
+    meta=json.loads((run / "meta.json").read_text())
+    command="ral local" if meta.get("target",{}).get("name")=="local-reference-agent" else "ral check"
+    print(f"Captured case: {dest}\nReplay: {command} --case {args.name}")
     return 0
 
 
@@ -320,9 +322,11 @@ def baseline(args, state):
     dest = state / "baseline"
     if args.action == "show":
         if not (dest / "meta.json").exists():
-            raise ValueError("no saved baseline; run ral check, then ral baseline save")
+            raise ValueError("no saved baseline; complete a check, then run ral baseline save")
         print(json.dumps(json.loads((dest / "meta.json").read_text()), indent=2))
         return 0
+    if not args.run and not (state/"latest.json").is_file():
+        raise ValueError("no completed check yet; run ral local or ral check, then ral baseline save")
     src = Path(args.run).resolve() if args.run else Path(json.loads((state / "latest.json").read_text())["run_dir"])
     card = reporting.scorecard(src)
     if card["exit_code"] == 2:
@@ -336,7 +340,9 @@ def baseline(args, state):
     for name in ("meta.json", "runs.jsonl", "check.json", "check.md", "check.html"):
         if (src / name).is_file():
             shutil.copy2(src / name, dest / name)
-    print(f"Saved baseline: {dest}\nNext: ral check --baseline saved")
+    meta=json.loads((dest / "meta.json").read_text())
+    command="ral local" if meta.get("target",{}).get("name")=="local-reference-agent" else "ral check"
+    print(f"Saved baseline: {dest}\nNext: {command} --baseline saved")
     return 0
 
 
