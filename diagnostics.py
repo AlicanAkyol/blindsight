@@ -25,13 +25,13 @@ def read_run(directory):
     return meta, scenarios, records
 
 
-def body_evidence(record, function):
+def body_evidence(record, function, identity_protocol="argument-name-v1"):
     if not function or (record.get("trace") or {}).get("telemetry") == "unavailable":
         return None
     calls = record.get("calls")
     if calls is None:
         return None
-    hits = body_hits(record, function)
+    hits = body_hits(record, function, identity_protocol=identity_protocol)
     return {"successful_call_indices": hits, "body_observed": bool(hits), "function": function}
 
 
@@ -73,7 +73,8 @@ def release_report(base_dir, candidate_dir, max_recall_drop=5, max_coverage_drop
         for finding in sorted(expected):
             bf = (bs[sid].get("capability_functions") or {}).get(finding)
             cf = (cs[sid].get("capability_functions") or {}).get(finding)
-            be, ce = body_evidence(b, bf), body_evidence(c, cf)
+            be = body_evidence(b, bf, bm.get("coverage_identity_protocol", "argument-name-v1"))
+            ce = body_evidence(c, cf, cm.get("coverage_identity_protocol", "argument-name-v1"))
             item = {"scenario": sid, "seed": seed, "finding": finding,
                     "baseline_evidence": {"file": br[key]["file"], "line": br[key]["line"], "body": be},
                     "candidate_evidence": {"file": cr[key]["file"], "line": cr[key]["line"], "body": ce}}

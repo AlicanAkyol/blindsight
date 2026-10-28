@@ -38,6 +38,16 @@ Changing label scope invalidates baseline compatibility.
 
 ## Delivery versus a successful tool call
 
+New runs record `coverage_identity_protocol: response-function-v1`. For an
+address-based decompile call, coverage can resolve the expected function from
+the delivered Ghidra JSON response when its returned name matches, its address
+equals the requested address, code is nonempty, and backend/client truncation
+is absent. Text mentions, a bare address, undelivered output or another
+function's response do not establish this identity. Telemetry is still
+adapter-reported. Runs without this field retain argument-name-only matching;
+different identity protocols require a fresh baseline. Historical evidence
+is not silently reinterpreted using the new address resolution.
+
 The built-in model runner and example adapter record raw output length/hash,
 the exact text appended to model context, delivered length/hash, and truncation.
 Calls made internally by a policy but not put in model context remain

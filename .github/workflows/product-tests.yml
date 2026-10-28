@@ -38,6 +38,7 @@ jobs:
           /tmp/ral-test/bin/python tests/test_measurement.py
           /tmp/ral-test/bin/python tests/test_external.py
           /tmp/ral-test/bin/python tests/test_verdict_policy.py
+          /tmp/ral-test/bin/python tests/test_address_coverage.py
       - name: Published numbers reproduce from evidence logs
         run: |
           /tmp/ral-test/bin/python evidence/recompute.py

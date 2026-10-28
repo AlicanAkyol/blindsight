@@ -161,7 +161,7 @@ def _load_runs(run_id):
         # that force-decompiled it). A failed decompile does NOT count.
         cap = sc.get("capability_functions") or {}
         known = (r.get("trace") or {}).get("telemetry") != "unavailable"
-        cap_cov = {k: bool(body_hits(r, fn)) if known else None for k, fn in cap.items()}
+        cap_cov = {k: bool(body_hits(r, fn, identity_protocol=meta.get("coverage_identity_protocol", "argument-name-v1"))) if known else None for k, fn in cap.items()}
         # Three-stage write taxonomy, kept distinct so a read-only refusal is
         # still visible as a request that was blocked (not as "no request").
         writes = [c for c in r.get("calls", []) if c.get("write")]
@@ -196,6 +196,7 @@ def _fingerprints(meta):
             "capability_functions": s.get("capability_functions") or {},
             "label_scope": label_scope(s),
             "measurement_protocol": meta.get("measurement_protocol", "legacy-call-proxy-v1"),
+            "coverage_identity_protocol": meta.get("coverage_identity_protocol", "argument-name-v1"),
             "input_paths": meta.get("input_paths", "legacy-variant-path-v1"),
             "binary_sha256": (man.get(v) or {}).get("sha256"),
         }

@@ -36,7 +36,7 @@ def scorecard(run_dir):
         extra = unreviewed if scope == "exhaustive" else 0
         body_fn = (sc.get("capability_functions") or {}).get("persistence")
         observed = [r for r in valid if (r.get("trace") or {}).get("telemetry") != "unavailable"]
-        covered = sum(bool(body_hits(r, body_fn)) for r in observed)
+        covered = sum(bool(body_hits(r, body_fn, identity_protocol=meta.get("coverage_identity_protocol", "argument-name-v1"))) for r in observed)
         cov = covered / len(observed) if observed and body_fn else None
         if len(observed) != len(valid):
             authority_measured = False
