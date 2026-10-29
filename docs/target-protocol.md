@@ -96,9 +96,50 @@ and is not copied into reports; inspect the adapter locally for diagnostics.
 See [security boundaries](security-boundaries.md) for the limits of subprocess
 cleanup and self-reported telemetry.
 
-See `examples/target_adapter.py` for the integration boundary; it deliberately
-requires you to connect your actual agent rather than returning a fake pass.
-`examples/openai_compatible_agent.py` is a complete adapter: an LLM on any
-OpenAI-compatible endpoint drives GhidraMCP headless, every MCP call is
-recorded, and `RAL_AGENT_READ_ONLY=1` refuses write tools before they reach
-Ghidra. Its docstring has the `.ral.yaml` target configuration.
+## Wrap an existing Python agent
+
+The helper is optional; standalone adapters can continue to implement the JSON
+protocol directly. To use it, install Blindsight in the same Python environment
+as the adapter, then wrap your real agent:
+
+```python
+from blindsight.adapter import serve
+from my_agent import analyse_binary
+
+
+def analyse(binary, prompt, seed):
+    # Your actual agent, not a fixture-answer lookup. Async callbacks work too.
+    report, calls = analyse_binary(binary, prompt=prompt, seed=seed)
+    return report, calls
+
+
+if __name__ == "__main__":
+    serve(analyse)
+```
+
+`report` and `calls` must follow the schema above. Return `None` for calls only
+when telemetry is genuinely unavailable; the harness then reports incomplete
+measurement, not a clean authority/coverage result. The helper does not create
+instrumentation, translate arbitrary prose, or infer calls from a final answer.
+It redirects Python library prints to stderr so they cannot corrupt the JSON
+response. Exceptions and invalid reports fail with exit 1 from the adapter,
+which becomes an execution error (exit 2) in RAL.
+
+For private local debugging, set `RAL_ADAPTER_LOG` to an absolute file path in
+an existing directory. For example, prefix the check command with:
+
+```sh
+RAL_ADAPTER_LOG="$PWD/adapter.log" ral check --target-command '...'
+```
+
+The helper appends library stdout/stderr and exception details to that file;
+on POSIX it uses owner-only permissions. It is opt-in because diagnostics can
+contain private information. The file is not embedded in RAL reports. This
+redirects Python streams, not native code writing directly to file descriptor 1;
+adapters using a JVM/native library must protect their own protocol stream.
+
+`examples/target_adapter.py` is a minimal integration template that deliberately
+fails until you connect a real agent. For an actual third-party orchestration
+loop with local Ollama, see the optional [mcp-use integration](mcp-use.md).
+`examples/openai_compatible_agent.py` remains the lower-level headless MCP
+adapter; its docstring documents the required native toolchain configuration.
