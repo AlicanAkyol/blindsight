@@ -157,7 +157,7 @@ Status: development toward v0.5.0; the previous release is v0.4.0 beta.
 The package is `blindsight`; its command is `ral`.
 Independent clean-machine testing is pending.
 
-**[Watch the demo (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4)** ·
+**[Watch the 54-second English walkthrough (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-local-en.mp4)** ·
 **[Runnable walkthrough](docs/demo.md)** ·
 **[Measurement definitions and compatibility](docs/measurement.md)** ·
 **[Project brief](docs/project-brief.md)**
