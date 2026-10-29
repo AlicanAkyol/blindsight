@@ -40,15 +40,28 @@ downloadable `recorded-demo-*` artifact; unzip it and open `index.html` locally.
 
 ## Video walkthrough
 
-[Watch the demo video (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4).
-The video is silent, with Turkish on-screen explanations. It captures actual
-installed-CLI command output and the HTML report generated during the recording.
-The comparison uses published historical runs, not new model inference. Local
-path prefixes are normalized in the display; measured results are unchanged.
+[Watch the 54-second English walkthrough (MP4)](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-local-en.mp4).
+Silent, with English on-screen explanations and screenshots of two real
+Qwen3:8b/Ollama runs. This is an illustrated recorded-results walkthrough,
+not a live terminal recording or a new inference run.
 
-This is an RE-agent evaluation project, not a malware detector or security
-certificate. The demonstration is a name-sensitive coverage failure and a
-controlled recovery intervention, with explicit pilot limits.
+It shows the current `ral local` workflow: one command, the first report,
+a saved baseline, and a paired comparison. All four scenarios produced valid
+results on both runs. The baseline comparison passes while the existing
+persistence misses remain visible; PASS does not mean the model is error-free.
+The same model was used on both sides; backend Python and agent source identity
+changed and were recorded. This is not a controlled model-change experiment.
+
+The video demonstrates **current main after v0.4.0**, not the older wheel
+attached to that release. Use the Git-based install in [Local setup](local.md).
+Requires uv, a running Docker engine and Ollama; first use downloads substantial
+backend/model assets. Your custom agent still needs a target adapter.
+[Source run IDs and input hashes](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-local-en.provenance.json)
+are available with the video. Free-text summary accuracy is not scored;
+this small fixture suite is not security certification.
+
+The [previous Turkish video](https://github.com/AlicanAkyol/blindsight/releases/download/v0.4.0/blindsight-demo.mp4)
+remains available as a walkthrough of the historical experiment.
 
 ## Reproduce published numbers without a model
 
@@ -83,22 +96,30 @@ whole suite unsupported findings fell from 6 to 1, but a new per-scenario
 error is still a regression. That is a useful honest demonstration, not a
 reason to weaken the default threshold to manufacture a green report.
 
-## Run a fresh check when the local stack is ready
+## Run a fresh local check
 
-Follow [quickstart.md](quickstart.md) for Ghidra, extension, Java and Ollama.
-In a separate empty directory, after installing `.[ghidra]`:
+With uv, a running Docker engine and Ollama installed, follow
+[Local setup](local.md). No host Java/Ghidra, YAML or adapter is needed for
+the bundled read-only reference agent:
 
 ```sh
-ral init
-ral doctor
-ral check --html fresh.html
-ral baseline save
-ral check --profile ghidramcp-ollama-coverage --baseline saved
+uvx --from 'blindsight[local] @ git+https://github.com/AlicanAkyol/blindsight' ral local
 ```
 
-Use the same suite on both sides. A quick run is one seed: a smoke test, not
-a stable rate estimate. A measured miss exits 1; missing execution/telemetry
-exits 2. Baselines may retain known misses; comparisons gate new regressions.
+For repeated use, install the CLI and save a baseline:
+
+```sh
+uv tool install 'blindsight[local] @ git+https://github.com/AlicanAkyol/blindsight'
+ral local
+ral baseline save
+ral local --model MODEL --baseline saved
+```
+
+Replace MODEL with a local tool-capable model name. Use the same suite on
+both sides. A quick run is one seed: a smoke test, not a stable rate estimate.
+A measured miss exits 1; missing execution/telemetry exits 2. Baselines may
+retain known misses; comparisons gate new regressions. For your own agent,
+use the target adapter path in [Quickstart](quickstart.md).
 
 ## What to inspect
 
