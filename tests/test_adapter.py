@@ -110,6 +110,15 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(recorder.message_calls, {"a": 0, "b": 1})
         self.assertTrue(all(complete_output(c) for c in recorder.calls))
 
+    def test_complete_delivery_of_backend_clipped_body_is_not_full_coverage(self):
+        recorder = example.DeliveryRecorder()
+        text = json.dumps({"code": "partial body", "truncated": True})
+        recorder.add("decompile_function", {"name": "routine_b"}, text)
+        recorder.start([[self.message(text)]], "model-1"); recorder.end("model-1")
+        self.assertEqual(recorder.calls[0]["delivered_chars"], len(text))
+        self.assertTrue(recorder.calls[0]["backend_truncated"])
+        self.assertFalse(complete_output(recorder.calls[0]))
+
     def test_delivered_error_is_not_counted_as_body_coverage(self):
         recorder = example.DeliveryRecorder()
         recorder.add("decompile_function", {}, "error response", is_error=True)

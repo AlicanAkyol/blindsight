@@ -38,6 +38,11 @@ class DeliveryRecorder:
         entry = {"tool": name, "args": arguments, "write": name in WRITE_TOOLS,
                  "is_error": is_error, "result_chars": len(text),
                  "raw_text": text, **delivery_fields(text, ""), "truncated": False}
+        if name in {"decompile_function", "decompile_function_by_address"}:
+            try:
+                entry["backend_truncated"] = json.loads(text).get("truncated") is True
+            except (ValueError, AttributeError):
+                entry["backend_truncated"] = False
         if refused:
             entry["refused_read_only"] = True
         self.calls.append(entry)
@@ -61,6 +66,8 @@ class DeliveryRecorder:
                 # raw_text is the MCP text before the framework's conversion.
                 if text == call["raw_text"]:
                     call.update(delivery_fields(call["raw_text"], text))
+                    # Receiving the whole response does not restore a body clipped by Ghidra.
+                    call["truncated"] |= call.get("backend_truncated", False)
                     self.message_calls[ident] = i
                     used.add(i)
                     break

@@ -47,7 +47,8 @@ checks the tool messages accompanying a successful model response; only exact
 text matches count as complete delivery. A tool result that was merely
 returned, changed into a summary, or left unused at the step limit does not
 count as fully delivered. This is request/context evidence, not proof of
-comprehension. Error responses never count as successful body coverage.
+comprehension. Error responses and bodies explicitly clipped by the backend never count as
+successful complete-body coverage.
 
 The example hides the eight write tools and refuses them in middleware before
 calling the backend. This is an adapter policy, not the proposed upstream
