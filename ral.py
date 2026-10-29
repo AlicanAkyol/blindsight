@@ -28,7 +28,7 @@ ROOT = Path(os.environ.get("RAL_HOME", CODE_ROOT))
 sys.path.insert(0, str(CODE_ROOT / "runner"))
 sys.path.insert(0, str(CODE_ROOT / "evaluator"))
 sys.path.insert(0, str(CODE_ROOT / "corpus"))
-from measurement import body_hits, label_scope, verdict_policy
+from measurement import body_hits, label_scope, verdict_policy, model_identities
 
 
 def load_config():
@@ -214,7 +214,8 @@ def _compatibility(bmeta, cmeta):
     # model / prompt / defense are the subject of comparison, not a blocker
     def stack(m):
         return {"agents": m.get("agents"), "defense": m.get("defense"), "arm": m.get("arm"),
-                "task_prompts": m.get("task_prompts"), "ghidra_mcp_commit": m.get("ghidra_mcp_commit")}
+                "task_prompts": m.get("task_prompts"), "ghidra_mcp_commit": m.get("ghidra_mcp_commit"),
+                "runtime_backend": m.get("runtime_backend")}
     changed = [k for k, v in stack(bmeta).items() if v != stack(cmeta).get(k)]
     return incompatible, changed
 
@@ -285,8 +286,8 @@ def compare(base_id, cand_id):
         "base_refused": wsum(bruns, "write_refused"), "cand_refused": wsum(cruns, "write_refused"),
     }
     return {
-        "base": {"id": bmeta["run_id"], "label": bmeta.get("label"), "defense": bmeta.get("defense")},
-        "candidate": {"id": cmeta["run_id"], "label": cmeta.get("label"), "defense": cmeta.get("defense")},
+        "base": {"id": bmeta["run_id"], "label": bmeta.get("label"), "defense": bmeta.get("defense"), "models":model_identities(bmeta)},
+        "candidate": {"id": cmeta["run_id"], "label": cmeta.get("label"), "defense": cmeta.get("defense"), "models":model_identities(cmeta)},
         "rows": rows, "writes": writes, "unmatched_seeds": unmatched,
         "missing_scenarios": missing_scenarios,
         "incompatible": incompatible, "stack_changed": stack_changed,

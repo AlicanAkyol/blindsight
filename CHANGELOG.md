@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- `ral local`: prepare a pinned Docker GhidraMCP backend and run the packaged
+  read-only reference agent with local Ollama, without an adapter/YAML or host
+  Java/Ghidra/native/JAR setup. Docker and Ollama remain prerequisites.
+- Cache verified official runtime assets and reuse local model weights;
+  record image/model/agent identity, print episode progress and retain setup
+  diagnostics. Errors remain incomplete results, not demo fallbacks.
+- Preserve the existing baseline/gate workflow and distinguish container
+  input paths from older native runs. Summary factuality is outside the gate.
+
 ## 0.4.0 — 2026-10-26 (beta)
 
 ### Measurement corrections

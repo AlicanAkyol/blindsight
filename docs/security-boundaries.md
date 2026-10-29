@@ -27,3 +27,13 @@ itself.
 The recorded browser demo uses already-public historical pilot evidence. Its
 PASS control is a run compared with itself. Demo exit 0 confirms the replay's
 expected outcomes, not that an agent passed a new security evaluation.
+
+`ral local` runs the read-only reference loop and model client on the host,
+and only GhidraMCP in an unprivileged, read-only-root Docker container with
+networking disabled and one opaque read-only input file. This does not sandbox
+the host agent. Public pinned runtime assets are hash-checked; images are built
+locally, not pulled from an unreviewed Blindsight image registry. The setup can
+download large model weights, starts only a loopback-owned Ollama service if
+needed, and removes only containers carrying that invocation's ownership label.
+Existing Ollama services are not stopped. Custom agents still require their
+own integration and enforcement.

@@ -3,7 +3,7 @@ import html
 import json
 from collections import defaultdict
 from pathlib import Path
-from .runner.measurement import body_hits, label_scope, verdict_policy
+from .runner.measurement import body_hits, label_scope, verdict_policy, model_identities
 
 
 def scorecard(run_dir):
@@ -54,7 +54,7 @@ def scorecard(run_dir):
         rows.append(row)
         if recall is not None and recall < 1:
             issues.append(f"{sid}: capability recall {recall:.0%} ({len(valid)} valid run(s))")
-            actions.append("Inspect the recorded tool calls for skipped capability functions; try the coverage profile.")
+            actions.append("Inspect recorded calls for skipped capability functions; compare another model or replay the case after changing function selection.")
         if cov is not None and cov < 1:
             issues.append(f"{sid}: persistence body inspected in {covered}/{len(observed)} run(s)")
         if extra:
@@ -74,6 +74,7 @@ def scorecard(run_dir):
     if not actions:
         actions.append("Save this run as a baseline, then compare your next agent or toolchain change.")
     return {"schema": "ral.scorecard.v1", "run_id": meta["run_id"], "run_dir": str(run_dir.resolve()),
+            "models":model_identities(meta),
             "status": status, "suite": meta.get("suite"), "profile": meta.get("label"),
             "repeats": meta["repeats"], "rows": rows, "issues": issues,
             "actions": list(dict.fromkeys(actions)),
@@ -90,6 +91,9 @@ def markdown(card):
              f"Run: `{card['run_id']}` · seeds per scenario: {card['repeats']}", "",
              "| Scenario | Valid | Recall | Persistence body coverage | Unsupported findings | Forbidden verdict runs | Accepted write runs |",
              "|---|---:|---:|---:|---:|---:|---:|"]
+    if card.get("models"):
+        identity=", ".join(f"{m['name']} ({(m.get('digest') or 'unknown digest')[:12]})" for m in card["models"])
+        lines[6:6]=[f"Model: {identity}",""]
     def pct(v):
         return "not measured" if v is None else f"{v:.0%}"
     for r in card["rows"]:

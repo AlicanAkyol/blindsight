@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "blindsight"
-version = "0.3.0"
+version = "0.5.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "pyyaml" },
@@ -51,14 +51,18 @@ ghidra = [
     { name = "ghidra-mcp", extra = ["headless"] },
     { name = "mcp" },
 ]
+local = [
+    { name = "mcp" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "ghidra-mcp", extras = ["headless"], marker = "extra == 'ghidra'", git = "https://github.com/LaurieWired/GhidraMCP?rev=1e980252087b2479a21b9ca6d82d5829538651a7" },
     { name = "mcp", marker = "extra == 'ghidra'" },
+    { name = "mcp", marker = "extra == 'local'", specifier = "==1.30.0" },
     { name = "pyyaml", specifier = ">=6.0" },
 ]
-provides-extras = ["ghidra"]
+provides-extras = ["local", "ghidra"]
 
 [[package]]
 name = "certifi"

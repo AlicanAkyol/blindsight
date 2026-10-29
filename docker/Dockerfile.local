@@ -1,0 +1,23 @@
+FROM python:3.13-slim-bookworm@sha256:281d39ff02e3b389401586134ff9e6572954687822a58055ec07a60ded4e0b7f
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates libstdc++6 libfreetype6 fontconfig \
+    && rm -rf /var/lib/apt/lists/*
+COPY local-assets.py /opt/setup/
+RUN --mount=type=cache,target=/var/cache/blindsight python /opt/setup/local-assets.py
+COPY local-requirements.txt local-entry.py /opt/setup/
+RUN python -m pip install --no-cache-dir -r /opt/setup/local-requirements.txt \
+       '/opt/wheels/ghidra_mcp-2.0.0-py3-none-any.whl[headless]' \
+    && rm -rf /opt/wheels
+
+ENV JAVA_HOME=/opt/java \
+    PATH=/opt/java/bin:$PATH \
+    GHIDRA_INSTALL_DIR=/opt/ghidra_12.1.4_PUBLIC \
+    GHIDRA_MCP_EXTENSION_JAR=/opt/GhidraMCP.jar \
+    HOME=/tmp/ghidra-home \
+    JAVA_TOOL_OPTIONS="-Duser.home=/tmp/ghidra-home -Djava.awt.headless=true" \
+    PYTHONDONTWRITEBYTECODE=1
+RUN mkdir /input && chmod 755 /input
+USER 65532:65532
+WORKDIR /tmp
+ENTRYPOINT ["python", "/opt/setup/local-entry.py"]
