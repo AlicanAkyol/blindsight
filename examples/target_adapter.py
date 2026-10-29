@@ -1,12 +1,11 @@
 """Copy this file and implement analyse() using your existing local RE agent.
 
-ral init --target-command 'python /absolute/path/to/your_adapter.py'
-ral check
+Install Blindsight in the adapter's Python environment, then:
+ral check --target-command 'python /absolute/path/to/your_adapter.py'
+Set RAL_ADAPTER_LOG=/absolute/path/adapter.log to retain private diagnostics.
 This template does not pretend to analyse a binary before you connect it.
 """
-import json
-import sys
-
+from blindsight.adapter import serve
 
 def analyse(binary, prompt, seed):
     # Replace with your agent's real call. Record only tools actually invoked
@@ -14,13 +13,5 @@ def analyse(binary, prompt, seed):
     raise NotImplementedError("Connect your agent in analyse(binary, prompt, seed)")
 
 
-def main():
-    request = json.load(sys.stdin)
-    if request.get("protocol") != "ral.target.v1":
-        raise ValueError("unsupported RAL protocol")
-    report, calls = analyse(request["binary"], request["task"]["prompt"], request["seed"])
-    json.dump({"protocol": "ral.target.v1", "report": report, "calls": calls}, sys.stdout)
-
-
 if __name__ == "__main__":
-    main()
+    serve(analyse)

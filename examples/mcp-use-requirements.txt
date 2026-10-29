@@ -1,0 +1,3 @@
+# External agent used in the local integration trial; optional, not RAL core dependencies.
+mcp-use @ git+https://github.com/mcp-use/mcp-use@98a049d22b47db108654599170a7fedace1dfc7a#subdirectory=libraries/python
+langchain-ollama==1.1.0

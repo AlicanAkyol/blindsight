@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add `blindsight.adapter.serve` for sync/async Python agent callbacks, validated
+  protocol responses, isolated Python diagnostic streams and opt-in private logs.
+- Add an optional pinned mcp-use MCPAgent + local Ollama/Ghidra example. MCP calls
+  and tool text accompanying successful model requests are accounted separately;
+  this is not the packaged reference-agent loop or independent adoption evidence.
 - `ral local`: prepare a pinned Docker GhidraMCP backend and run the packaged
   read-only reference agent with local Ollama, without an adapter/YAML or host
   Java/Ghidra/native/JAR setup. Docker and Ollama remain prerequisites.

@@ -102,8 +102,11 @@ uvx --from 'git+https://github.com/AlicanAkyol/blindsight' ral check \
   --html report.html
 ```
 
-Your adapter must implement [ral.target.v1](docs/target-protocol.md). Use its
-own Python/runtime when it has dependencies. No `ral init` or YAML is needed;
+Your adapter must implement [ral.target.v1](docs/target-protocol.md).
+A [small Python helper](docs/target-protocol.md#wrap-an-existing-python-agent)
+handles the JSON boundary and optional private diagnostics; the
+[mcp-use example](docs/mcp-use.md) connects a third-party MCPAgent loop.
+Use its own Python/runtime when it has dependencies. No `ral init` or YAML is needed;
 the command and fixture results are recorded under `.ral/results/`. The adapter
 runs with your permissions; this is not a sandbox. Each episode has a timeout
 and bounded stdout/stderr capture. See [security boundaries](docs/security-boundaries.md).
