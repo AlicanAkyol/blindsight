@@ -1,3 +1,11 @@
+# /// script
+# requires-python = ">=3.11,<3.14"
+# dependencies = [
+#   "blindsight[local] @ git+https://github.com/AlicanAkyol/blindsight@e464c9ca44037240bca6412d3f791e77b6059324",
+#   "mcp-use @ git+https://github.com/mcp-use/mcp-use@98a049d22b47db108654599170a7fedace1dfc7a#subdirectory=libraries/python",
+#   "langchain-ollama==1.1.0",
+# ]
+# ///
 """Experimental mcp-use MCPAgent adapter, local Ollama + pinned Docker Ghidra.
 
 See docs/mcp-use.md. This runs the external MCPAgent loop, not Blindsight's
@@ -8,6 +16,8 @@ import json
 import logging
 import os
 from pathlib import Path
+import shlex
+import sys
 import tempfile
 import uuid
 
@@ -159,5 +169,28 @@ async def analyse(binary, prompt, seed):
                 docker_call(["rm", "-f", *ids], env)
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "--check":
+        from blindsight.product import main as check
+
+        # Keep this command tied to the measured external agent. Alternate
+        # targets belong in ral check, not a run labelled as this example.
+        for arg in argv[1:]:
+            option = arg.split("=", 1)[0]
+            if option.startswith("--") and any(
+                blocked.startswith(option) for blocked in ("--target-command", "--target", "--profile")
+            ):
+                print("Use ral check directly to select a different agent.", file=sys.stderr)
+                return 2
+        command = shlex.join([sys.executable, str(Path(__file__).resolve())])
+        return check(["check", "--target-command", command, *argv[1:]])
+    if argv:
+        print("Usage: mcp_use_agent.py --check [ral check options]", file=sys.stderr)
+        return 2
     serve(analyse)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

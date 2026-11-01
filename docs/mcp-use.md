@@ -8,8 +8,27 @@ validation of every mcp-use configuration.
 
 ## Setup
 
-Use Python 3.11–3.13, uv, a running local Docker engine and Ollama. From a
-Blindsight checkout:
+Use uv, a running local Docker engine and Ollama on Linux/macOS. From an empty
+working directory, run:
+
+```sh
+uv run --python 3.13 https://raw.githubusercontent.com/AlicanAkyol/blindsight/main/examples/mcp_use_agent.py --check --html report.html --json report.json
+```
+
+uv supplies an isolated Python environment and the script's pinned dependencies;
+no checkout, virtualenv activation, YAML or adapter path is needed. The command
+runs the external MCPAgent, not the packaged reference agent. First use downloads
+substantial backend/model assets and may take time. It writes results under
+`.ral/` and the requested HTML/JSON reports in the current directory.
+
+Exit 0 means the measured checks passed, 1 means valid results contain findings
+or regressions, and 2 means the check is incomplete or incompatible. A nonzero
+exit is not necessarily an installation failure; read the scorecard. This quick
+run has one seed per scenario. Add `--suite ci` for three or `--suite full` for ten.
+Do not treat a one-seed comparison as evidence of a stable regression.
+
+To review the script before running it, or to modify your own integration, use
+Python 3.11–3.13 from a Blindsight checkout:
 
 ```sh
 uv venv --python 3.13 .venv
