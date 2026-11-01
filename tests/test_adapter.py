@@ -3,6 +3,7 @@ import importlib.util
 import io
 import json
 import os
+import shlex
 from pathlib import Path
 import stat
 import sys
@@ -18,6 +19,33 @@ spec = importlib.util.spec_from_file_location("mcp_use_example", Path(__file__).
 example = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(example)
 REPORT = {"verdict": "suspicious", "findings": [], "summary": "Simulated test only"}
+
+
+class ExampleEntryTests(unittest.TestCase):
+    def test_check_uses_same_interpreter_and_adapter_and_propagates_exit(self):
+        for code in (0, 1, 2):
+            with self.subTest(code=code), patch("blindsight.product.main", return_value=code) as check, \
+                    patch.object(sys, "executable", "/tmp/env with spaces/bin/python"), \
+                    patch.object(example, "serve") as serve:
+                self.assertEqual(example.main(["--check", "--suite", "ci", "--html", "report.html"]), code)
+                args = check.call_args.args[0]
+                self.assertEqual(args[:2], ["check", "--target-command"])
+                self.assertEqual(shlex.split(args[2]), [sys.executable, str(Path(example.__file__).resolve())])
+                self.assertEqual(args[3:], ["--suite", "ci", "--html", "report.html"])
+                serve.assert_not_called()
+
+    def test_protocol_child_never_recursively_starts_check(self):
+        with patch.object(example, "serve") as serve, patch("blindsight.product.main") as check:
+            self.assertEqual(example.main([]), 0)
+            serve.assert_called_once_with(example.analyse)
+            check.assert_not_called()
+
+    def test_rejects_target_override_including_argparse_abbreviations(self):
+        for option in ("--target-command=other", "--target", "--profile", "--target-c", "--prof"):
+            with self.subTest(option=option), patch("blindsight.product.main") as check, \
+                    patch.object(sys, "stderr", io.StringIO()):
+                self.assertEqual(example.main(["--check", option]), 2)
+                check.assert_not_called()
 
 
 class AdapterTests(unittest.TestCase):
